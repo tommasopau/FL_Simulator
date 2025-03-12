@@ -1,0 +1,19 @@
+federated_learning:
+  aggregation_strategy: DCT
+  alpha: 0.5
+  attack: SIGN_FLIP
+  batch_size: 64
+  dataset: fashion_mnist
+  global_epochs: 30
+  learning_rate: 0.001
+  local_epochs: 4
+  num_attackers: 20
+  num_clients: 50
+  partition_type: non-iid
+  sampled_clients: 50 #all
+  seed: 42
+  local_DP_SGD: False
+model:
+  type: FNet
+
+

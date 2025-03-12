@@ -3,7 +3,7 @@ from utils.logger import setup_logger
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
-
+import random
 import torch
 import numpy as np
 from torch.utils.data import DataLoader
@@ -19,9 +19,11 @@ class DatasetUtils:
         """
         Apply transformations to the images in the dataset.
         """
-        pytorch_transforms = Compose([ToTensor(), Normalize((0.1307,), (0.3081,))])
+        pytorch_transforms = Compose([ToTensor(), Normalize((0.1307,), (0.3081,))]) #Mnist Value -> add fashion_mnist (0.1307,), (0.3081,
         batch["image"] = [pytorch_transforms(img) for img in batch["image"]]
         return batch
+    
+    
 
 
 class DatasetHandler:
@@ -34,6 +36,8 @@ class DatasetHandler:
         self.fds = None
         self.client_datasets = None
         self.datasetID = datasetID
+        self.label_flipping_attack = False
+        self.num_attackers = 0
         self.logger = logging.getLogger(__name__)
         self.logger.info("DatasetHandler initialized.")
 
@@ -58,6 +62,11 @@ class DatasetHandler:
         self.fds = FederatedDataset(dataset=self.datasetID, partitioners={"train": partitioner})
         self.client_datasets = [self.fds.load_partition(user_id) for user_id in range(self.num_clients)]
         self.logger.info("Federated dataset loaded and partitioned.")
+        if self.label_flipping_attack:
+            attackers = [cid for cid in range(self.num_attackers)] #manual setting attackers to be updated
+            self.attack_client_datasets_structured(attackers , 1.00 ) #experiment to perfrom label flipping attack
+            
+        
         
         self.apply_transforms_to_clients()
 
@@ -79,6 +88,50 @@ class DatasetHandler:
         transformed_test = test_dataset.with_transform(DatasetUtils.apply_transforms)
         self.logger.info("Test dataset loaded and transformed.")
         return transformed_test
+    
+    ### TESTING ###
+    
+    def get_default_label_mapping(self, num_classes: int) -> dict:
+        """
+        Returns a default structured label mapping where each label is mapped to (label + 1) modulo num_classes.
+        For example, with num_classes=10, the mapping is {0: 1, 1: 2, ..., 9: 0}.
+        """
+        return {i: (i + 1) % num_classes for i in range(num_classes)}
+
+    def attack_client_datasets_structured(self, attacked_clients: list, flip_percentage: float, num_classes: int = 10, mapping: dict = None):
+        """
+        Attacks specified clients' datasets by flipping a given percentage of their labels using a structured mapping.
+        If no mapping is provided, a default mapping {i: (i+1)%num_classes} is used.
+        
+        Args:
+            attacked_clients (List[int]): List of client indices to attack.
+            flip_percentage (float): Percentage (0-100) of labels to flip in each attacked client dataset.
+            num_classes (int): Total number of classes.
+            mapping (dict, optional): A mapping dict defining the new label for each original label.
+        """
+        if mapping is None:
+            mapping = self.get_default_label_mapping(num_classes)
+        self.logger.info(f"Attacking clients {attacked_clients} with {flip_percentage}% structured label flips.")
+        for client_id in attacked_clients:
+            self.logger.info(f"Attacking client {client_id} dataset using structured mapping.")
+            client_dataset = self.client_datasets[client_id]
+            total_examples = len(client_dataset)
+            n_to_flip = int(total_examples * flip_percentage)
+            # Randomly sample indices to flip
+            indices_to_flip = set(random.sample(range(total_examples), n_to_flip))
+            
+            def structured_flip(example, idx):
+                if idx in indices_to_flip:
+                    original = example['label']
+                    example['label'] = mapping.get(original, original)
+                return example
+
+            # Use with_indices=True to get the index passed to the function
+            client_dataset = client_dataset.map(lambda example, idx: structured_flip(example, idx), with_indices=True)
+            # Update the client dataset with the attacked version
+            self.client_datasets[client_id] = client_dataset
+
+        self.logger.info("Structured attack complete on selected client datasets.")
 
 
 class FederatedDataLoader:
@@ -104,4 +157,18 @@ class FederatedDataLoader:
             shuffle=False,
             num_workers=0,
             pin_memory=True if self.device == 'cuda' else False
+        )
+
+def server_dataset(datasetID: str, batch_size: int, device: str) -> DataLoader:
+        """
+        Load the server dataset for FLTRUST
+        """
+        fds = FederatedDataset(dataset=datasetID, partitioners={"train": IidPartitioner(num_partitions=600)})
+        server_dataset = fds.load_partition(0).with_transform(DatasetUtils.apply_transforms)
+        return DataLoader(
+            server_dataset,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=0,
+            pin_memory=True if device == 'cuda' else False
         )

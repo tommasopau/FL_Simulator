@@ -1,1 +1,5 @@
 .conda/
+simulation.db
+simulationResearch/
+__pycache__/
+*.pyc

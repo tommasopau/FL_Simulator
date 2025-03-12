@@ -111,3 +111,21 @@ class ZalandoCNN(BaseModel):
         out = self.fc2(out)
         out = self.fc3(out)
         return out
+
+
+class FNet(BaseModel):
+    def __init__(self):
+        super(FNet,self).__init__()
+        self.fc1=nn.Linear(784,512)
+        self.fc2=nn.Linear(512,256)
+        self.out=nn.Linear(256,10)
+        
+        # Dropout probability - set for avoiding overfitting
+        self.dropout=nn.Dropout(0.2)
+
+    def forward(self,x):
+        x = x.view(-1, 28 * 28)        
+        x=self.dropout(F.relu(self.fc1(x)))
+        x=self.dropout(F.relu(self.fc2(x)))
+        x=self.out(x)
+        return x
