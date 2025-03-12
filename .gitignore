@@ -1,5 +1,6 @@
 .conda/
 simulation.db
 simulationResearch/
+backend/results.txt/
 __pycache__/
 *.pyc
