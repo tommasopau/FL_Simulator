@@ -1,6 +1,8 @@
 # FL Simulator
 
-FL Simulator is a federated learning simulation platform. The project consists of a Python-based backend and a [Streamlit](https://streamlit.io) frontend, enabling you to configure parameters, run simulations, and execute queries interactively.
+# FL Simulator
+
+FL Simulator is a federated learning simulation platform. The project consists of a Python-based backend and a [Streamlit](https://streamlit.io) frontend, enabling you to configure parameters, run simulations, and execute queries interactively. It also offers various attack and defense schemes to help study the robustness and security of federated learning settings.
 
 ## Project Structure
 
