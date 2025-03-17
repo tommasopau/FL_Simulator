@@ -158,8 +158,10 @@ def median_aggregation(
 
     global_update, _ = torch.median(torch.cat(gradients, dim=1), dim=-1)
     
-    # Update the global model
+    
     update_global_model(net, global_update, device)
+    
+    return global_update
     
 
 def trim_mean(
@@ -223,6 +225,7 @@ def KeTS(
         **kwargs: Additional keyword arguments.
     """
     logger.info("Aggregating gradients using KeTS.")
+    server = kwargs.get('last_global_update', None)
     # Update trust scores for sampled clients
     if all(update is None for update in last_updates.values()):
         fedavg(gradients, net, lr, f, device, **kwargs)
@@ -284,31 +287,14 @@ def DCT(
     '''
     a1_tensors = []
     if all(update is None for update in last_updates.values()):
-        '''
-        logger.info("No last updates available; computing DWT-based features from current gradient updates for clustering.")
-        features_list = []
-        for cid, gradient in gradients:
-            flat_update = gradient['flattened_diffs'].view(-1)
-            flat_update_np = flat_update.detach().cpu().numpy()
-            # Compute DWT (using Haar and level=4, similar to modality 3)
-            A, D1, D2, D3, D4 = pywt.wavedec(flat_update_np, 'haar', level=4)
-            
-            # Convert selected coefficients to tensors
-            A_tensor = torch.from_numpy(A).to(device)
-            D1_tensor = torch.from_numpy(D1).to(device)
-            D2_tensor = torch.from_numpy(D2).to(device)
-            
-            
-            
-            features_list.append({
-                "cid": cid,
-                "features": [],  # Extend this list with additional features if needed.
-                "A1": A_tensor,
-                "D1": D1_tensor,
-                "D2": D2_tensor,
-            })
-        # Proceed with clustering using features_list (e.g. normalizing and clustering as below)
-        '''
+        logger.info("No last updates available; performing component-wise median aggregation to avoid outliers.")
+        grads = [gradient[1]['flattened_diffs'] for gradient in gradients]
+        # Stack gradients into a tensor of shape (n_clients, n_params)
+        stacked = torch.stack(grads, dim=0)
+        global_update, _ = torch.median(stacked, dim=0)
+        update_global_model(net, global_update, device)
+        server.last_global_update = global_update
+        return 
     else:
         for cid, gradient in gradients:
             
@@ -374,11 +360,12 @@ def DCT(
                     euclidean_D3_global = torch.norm(D3_tensor - torch.from_numpy(D3_global).to(device)).item()
                     euclidean_D4_global = torch.norm(D4_tensor - torch.from_numpy(D4_global).to(device)).item()
                     
-                    logger.info(f"client {cid}, cosine similarity (A): {server_cosA:.3f}, (D1): {server_cosD1:.3f} , Euclidean distance (A): {euclidean_A_global:.3f}, (D1): {euclidean_D1_global:.3f}")
+                    #logger.info(f"client {cid}, cosine similarity (A): {server_cosA:.3f}, (D1): {server_cosD1:.3f} , Euclidean distance (A): {euclidean_A_global:.3f}, (D1): {euclidean_D1_global:.3f}")
                     features_list[-1]["features"].extend([
                         server_cosA, server_cosD1, server_cosD2, server_cosD3, server_cosD4,
                         euclidean_A_global, euclidean_D1_global, euclidean_D2_global, euclidean_D3_global, euclidean_D4_global
                     ])
+                    '''
                     # --- Added raw update comparisons ---
                     raw_update_current = gradient['flattened_diffs'].view(-1)
                     raw_update_last = server.last_global_update.view(-1)
@@ -386,7 +373,7 @@ def DCT(
                     raw_euc = torch.norm(raw_update_current - raw_update_last).item()
                     logger.info(f"client {cid}, raw cosine similarity: {raw_cos:.3f}, raw Euclidean distance: {raw_euc:.3f}")
                     #features_list[-1]["features"].extend([raw_cos, raw_euc])
-                    
+                    '''
         
         
     
@@ -419,9 +406,10 @@ def DCT(
             # Append total metrics for A1, D1 and D2 in order
             '''
             features_list[i]["features"].extend([
-                cos_sim_tot_A1, euc_dist_tot_A1,
-            ])
+                cos_sim_tot_A1
+            ]) #euc_dist_tot_A1
             '''
+            
             colluding_scores[features_list[i]['cid']] = collud_count
 
         logger.info(f"Colluding scores: {colluding_scores}")
@@ -494,9 +482,9 @@ def DCT(
             # 21: euc_dist_tot_A1
             score = (
                 (mean_feat[0] ) +
-                2*(mean_feat[10] + mean_feat[11]) -
+                (mean_feat[10] + mean_feat[11]) -
                 (mean_feat[5]) -
-                2*(mean_feat[15] + mean_feat[16])
+                (mean_feat[15] + mean_feat[16])
             )
             cluster_scores[label] = score
             logger.info(f"Cluster {label} score: {score:.6f}")
@@ -542,8 +530,9 @@ def DCT(
         filtered_gradients = [gradient for gradient in gradients if gradient[0] in selected_cids]
     else:
         filtered_gradients = gradients
-
+        
     global_update = fedavg(filtered_gradients, net, lr, f, device, **kwargs)
+
     ema_alpha = 0.3
     if server.last_global_update is None:
         server.last_global_update = global_update
@@ -637,7 +626,7 @@ def DCT_K(
             cos_sim = F.cosine_similarity(mean0.view(1, -1), mean1.view(1, -1)).item()
             logger.info(f"Cosine similarity between cluster means: {cos_sim:.6f}")
             
-            if cos_sim > baseline_cosine:
+            if (cos_sim > baseline_cosine):
                 logger.info("Clusters are similar (cosine sim > baseline), merging clusters for aggregation.")
                 selected_cids = [item["cid"] for item in features_list]
             else:
@@ -820,10 +809,13 @@ def DCT_raw(
                 euclidean_A = client_feature["features"][1]
                 server_cos = client_feature["features"][2]
                 server_euc = client_feature["features"][3]
-                score = cosA + server_cos - server_euc - euclidean_A
+                #cos_tot = client_feature["features"][4]
+                #euc_tot = client_feature["features"][5]
+                score = cosA +  server_cos - server_euc - euclidean_A 
                 scores.append(score)
             cluster_scores[label] = np.mean(scores)
             logger.info(f"Cluster {label} score: {cluster_scores[label]:.6f}")
+            
         
         best_cluster = max(cluster_scores, key=cluster_scores.get)
         logger.info(f"Best cluster selected for aggregation: {best_cluster}")
@@ -838,6 +830,135 @@ def DCT_raw(
     
     # Exponential moving average (EMA) update of global update.
     ema_alpha = 0.3
+    if server is not None:
+        if server.last_global_update is None:
+            server.last_global_update = global_update
+        else:
+            server.last_global_update = ema_alpha * global_update + (1 - ema_alpha) * server.last_global_update
+
+def KeTSV2(
+    gradients: List[Tuple[int, Dict[str, torch.Tensor]]],
+    net: nn.Module,
+    lr: float,
+    f: int,
+    device: torch.device,
+    trust_scores: Dict[int,float],
+    last_updates: Dict[int, torch.Tensor],
+    baseline_decreased_score: float,
+    **kwargs
+) -> None:
+    """
+    KeTS aggregation method.
+
+    Args:
+        gradients (List[torch.Tensor]): List of gradients from the clients.
+        net (nn.Module): The global model to be updated.
+        lr (float): Learning rate.
+        f (int): Number of malicious clients.
+        device (torch.device): Computation device.
+        trust_scores (List[float]): Trust scores for each client.
+        last_updates (Dict[int, torch.Tensor]): Last updates from each client.
+        **kwargs: Additional keyword arguments.
+    """
+    logger.info("Aggregating gradients using KeTSV2.")
+    server = kwargs.get('last_global_update', None)
+    # check step-----
+    check_clients = [30] #3132
+    if check_clients is not None and all(update is None for update in last_updates.values()):
+        honest_updates = gradients
+        logger.info(f"Performing additional check step using check list: {check_clients}")
+        
+        # Identify checked clients from the honest updates.
+        checked = {cid: grad for cid, grad in honest_updates if cid in check_clients}
+        # For each client not in the check list, compute the sum of cosine similarities with each checked client.
+        sum_cosine = {}
+        for cid, grad in honest_updates:
+            if cid in checked:
+                continue  # Do not compare two check clients.
+            flat_update = grad['flattened_diffs'].view(-1)
+            sim_sum = 0.0
+            for chk_cid, chk_grad in checked.items():
+                flat_chk = chk_grad['flattened_diffs'].view(-1)
+                sim_val = F.cosine_similarity(flat_update, flat_chk, dim=0).item()
+                sim_sum += sim_val
+            sum_cosine[cid] = sim_sum
+        
+        # Normalize sum_cosine values to be between 0 and 1
+        max_sum = max(sum_cosine.values())
+        min_sum = min(sum_cosine.values())
+        normalized_sum_cosine = {cid: (total - min_sum) / (max_sum - min_sum) for cid, total in sum_cosine.items()}
+        
+        # Sort non-checked clients by the normalized sum (in descending order).
+        sorted_sum = sorted(normalized_sum_cosine.items(), key=lambda x: x[1], reverse=True)
+        
+        ls = segmentation(np.array([total  for _, total in sorted_sum]),'exponential')
+        logger.info(f"Segmentation threshold: {ls}")
+        logger.info("Sorted sum of cosine similarities:")
+        for cid, total in sorted_sum:
+            logger.info(f"Client {cid}: {total:.6f}")
+        filtered = []
+        for cid, total in sorted_sum:
+            if total >= ls:
+                filtered.append(cid)
+        
+        logger.info(f"Filtered clients: {filtered}")
+        gradients = [(cid, grad) for cid, grad in honest_updates if cid in filtered]
+        global_update = fedavg(gradients, net, lr, f, device, **kwargs)
+        server.last_global_update = global_update
+        return
+    '''
+    --MEDIAN round 1
+    if all(update is None for update in last_updates.values()):
+        grads = [gradient[1]['flattened_diffs'] for gradient in gradients]
+        # Stack gradients into a tensor of shape (n_clients, n_params)
+        stacked = torch.stack(grads, dim=0)
+        global_update, _ = torch.median(stacked, dim=0)
+        update_global_model(net, global_update, device)
+        server.last_global_update = global_update
+        return
+    '''
+    for cid,gradient in gradients:
+        if last_updates[cid] is not None:
+            flat_update1 = gradient['flattened_diffs'].view(-1)
+            flat_update2 = last_updates[cid].view(-1)
+            
+            # Compute cosine similarity
+            sim = F.cosine_similarity(flat_update1, flat_update2, dim=0).item()
+            # Compute Euclidean distance
+            dist = torch.norm(flat_update1 - flat_update2).item()
+            #logger.info(f"client {cid}, cosine similarity: {sim}, Euclidean distance: {dist}")
+            if sim >= 0:
+                alpha = (1 - sim) + dist
+                trust_scores[cid] = max(0, trust_scores[cid] - baseline_decreased_score * alpha )
+            else:
+                trust_scores[cid] = 0
+    logger.info(f"Updated trust scores: {trust_scores}")
+
+            
+    trust_scores_sampled = np.array([trust_scores[cid] for cid,_ in gradients])
+    last_segment = segmentation(trust_scores_sampled , 'gaussian')
+    logger.info(f"Segmentation threshold vertycal analyses: {last_segment}")
+    
+    honest_updates = [(cid,gradient) for cid,gradient in gradients if trust_scores[cid] >= last_segment]
+    logger.info(f"Attacker clients vertical analyses: {[cid for cid,_ in gradients if trust_scores[cid] < last_segment]}")
+    sim_with_global = defaultdict(float)
+    if server is not None and getattr(server, 'last_global_update', None) is not None:
+        final_updates = []
+        for cid, grad in honest_updates:
+            flat_update = grad['flattened_diffs'].view(-1)
+            global_flat = server.last_global_update.view(-1)
+            cos_sim_global = F.cosine_similarity(flat_update, global_flat, dim=0).item()
+            sim_with_global[cid] = cos_sim_global
+            
+            euc_dist_global = torch.norm(flat_update - global_flat).item()
+            logger.info(f"client {cid}, cosine similarity with global: {cos_sim_global}, Euclidean distance with global: {euc_dist_global}")
+    if sim_with_global:
+        #server_segment = segmentation(np.array(list(sim_with_global.values())) , 'exponential')
+        honest_updates = [(cid,gradient) for cid,gradient in honest_updates if sim_with_global[cid] >= 0.1]
+    logger.info(f"Aggregated clients {[cid for cid,_ in honest_updates]}")
+    
+    global_update = fedavg(honest_updates, net, lr, f, device, **kwargs)
+    ema_alpha = 0.2
     if server is not None:
         if server.last_global_update is None:
             server.last_global_update = global_update

@@ -23,7 +23,7 @@ app = Flask(__name__)
 engine = get_engine()
 session = get_session(engine)
 
-CONFIG_OVERRIDES = {}  # Keep updated parameters in memory
+CONFIG_OVERRIDES = {}  
 
 @app.route('/api/config', methods=['POST'])
 def update_config():

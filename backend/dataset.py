@@ -68,9 +68,9 @@ class DatasetHandler:
             
         
         
-        self.apply_transforms_to_clients()
+        self._apply_transforms_to_clients()
 
-    def apply_transforms_to_clients(self):
+    def _apply_transforms_to_clients(self):
         """
         Apply transformations to each client's dataset.
         """
@@ -89,7 +89,6 @@ class DatasetHandler:
         self.logger.info("Test dataset loaded and transformed.")
         return transformed_test
     
-    ### TESTING ###
     
     def get_default_label_mapping(self, num_classes: int) -> dict:
         """
@@ -140,7 +139,7 @@ class FederatedDataLoader:
         self.batch_size = batch_size
         self.device = device
 
-    def get_client_data(self, client_id: int) -> DataLoader:
+    def _get_client_data(self, client_id: int) -> DataLoader:
         return DataLoader(
             self.dataset_handler.client_datasets[client_id],
             batch_size=self.batch_size,
@@ -149,7 +148,7 @@ class FederatedDataLoader:
             pin_memory=True if self.device == 'cuda' else False
         )
 
-    def get_test_data(self) -> DataLoader:
+    def _get_test_data(self) -> DataLoader:
         test_dataset = self.dataset_handler.load_test_data()
         return DataLoader(
             test_dataset,

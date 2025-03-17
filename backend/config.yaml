@@ -1,13 +1,13 @@
 federated_learning:
-  aggregation_strategy: DCT
+  aggregation_strategy: MEDIAN
   alpha: 0.5
-  attack: SIGN_FLIP
+  attack: MIN_MAX_V2
   batch_size: 64
   dataset: fashion_mnist
   global_epochs: 30
   learning_rate: 0.001
   local_epochs: 4
-  num_attackers: 20
+  num_attackers: 15
   num_clients: 50
   partition_type: non-iid
   sampled_clients: 50 #all

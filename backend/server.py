@@ -15,6 +15,7 @@ from aggregation_techniques.aggregation import (
     DCT,
     DCT_K,
     DCT_raw,
+    KeTSV2
     
 )
 from enum import Enum, auto
@@ -24,7 +25,11 @@ import ray
 
 from dataset import FederatedDataLoader
 from client import Client
-from attacks import min_max_attack, min_sum_attack, krum_attack, trim_attack, no_attack , gaussian_attack , label_flip_attack , min_max_attack_variant , sign_flip_attack
+from attacks import (
+    min_max_attack, min_sum_attack, krum_attack, trim_attack, no_attack,
+    gaussian_attack, label_flip_attack, min_max_attack_variant, sign_flip_attack,
+    min_sum_attack_variant
+)
 
 
 class AggregationStrategy(Enum):
@@ -37,6 +42,7 @@ class AggregationStrategy(Enum):
     FLTRUST = auto()
     DCT_K = auto()
     DCT_raw = auto()
+    KeTSV2 = auto()
 #Enumeration that is later mapped to each aggregation method. The auto() function is used to automatically assign unique values to each member.
 
 aggregation_methods = {
@@ -49,6 +55,7 @@ aggregation_methods = {
     AggregationStrategy.FLTRUST: None,
     AggregationStrategy.DCT_K: DCT_K,
     AggregationStrategy.DCT_raw: DCT_raw,
+    AggregationStrategy.KeTSV2: KeTSV2
     
 }
 
@@ -61,6 +68,7 @@ class AttackType(Enum):
     GAUSSIAN = auto()
     LABEL_FLIP = auto()
     MIN_MAX_V2 = auto()
+    MIN_SUM_V2 = auto()
     SIGN_FLIP = auto()
     
 #Enumeration that is later mapped to each attack method. The auto() function is used to automatically assign unique values to each member.
@@ -74,6 +82,7 @@ attacks = {
     AttackType.GAUSSIAN: gaussian_attack,
     AttackType.LABEL_FLIP: label_flip_attack,
     AttackType.MIN_MAX_V2: min_max_attack_variant,
+    AttackType.MIN_SUM_V2: min_sum_attack_variant,
     AttackType.SIGN_FLIP: sign_flip_attack
     
 }
@@ -149,7 +158,7 @@ class Server:
         self.federated_data_loader = federated_data_loader
         self.num_clients = self.federated_data_loader.dataset_handler.num_clients
         self.sampled = sampled # Number of clients to sample per round
-        self.test_loader = self.federated_data_loader.get_test_data()
+        self.test_loader = self.federated_data_loader._get_test_data()
 
         self.global_model = global_model.to(self.device)
         self.global_parameters = self.global_model.state_dict()
@@ -165,96 +174,91 @@ class Server:
         self.aggregation_method = aggregation_methods[aggregation_strategy]
         self.aggregation_kwargs = kwargs  # Store additional kwargs for aggregation
 
-    def sample_clients(self, num_of_sampled : int) -> List[int]:
+    def _order_clients_by_attackers(
+        self, sampled_clients: List[int]
+    ) -> Tuple[List[int], int]:
         """
-        Sample a subset of clients for the current round.
-
-        Args:
-            num_of_sampled (int): Number of clients to sample.
-
-        Returns:
-            List[int]: List of sampled client IDs.
+        Re-orders the sampled clients by placing attackers (client_id < self.f)
+        first and returns the ordered list along with the number of attackers.
         """
-        if num_of_sampled > self.num_clients:
-            self.logger.warning("Requested number of clients exceeds available clients. Sampling all clients.")
-        sampled_clients = random.sample(range(self.num_clients), num_of_sampled)
         attackers = [cid for cid in sampled_clients if cid < self.f]
         number_of_attackers_epoch = len(attackers)
         non_attackers = [cid for cid in sampled_clients if cid >= self.f]
-        sampled_clients = attackers + non_attackers #attackers are always sampled first
-        self.logger.info(f"Sampled clients: {sampled_clients}")
-        return sampled_clients , number_of_attackers_epoch
-    def sample_from_weights(self, weights: Dict[int,float], num_of_sampled: int) -> List[int]:
+        return attackers + non_attackers, number_of_attackers_epoch
+    def _train_clients(self, sampled_client_ids: List[int]) -> List[Tuple[int, Dict[str, torch.Tensor]]]:
         """
-        Sample a subset of clients based on their weights.
-
-        Args:
-            weights (Dict[int, float]): Dictionary of client IDs and their weights.
-            num_of_sampled (int): Number of clients to sample.
+        Launch parallel training tasks for the given client IDs and return their updates.
 
         Returns:
-            List[int]: List of sampled client IDs.
+            List[Tuple[int, Dict[str, torch.Tensor]]]: A list of tuples pairing the client ID with its update.
+        """
+        futures = [
+            train_client.remote(
+                client_id,
+                self.federated_data_loader._get_client_data(client_id),
+                copy.deepcopy(self.global_model),
+                self.local_epochs,
+                self.learning_rate,
+                self.device,
+                self.local_dp
+            )
+            for client_id in sampled_client_ids
+        ]
+        client_updates = ray.get(futures)
+        return list(zip(sampled_client_ids, client_updates))
+
+
+    def _sample_clients(self, num_of_sampled: int) -> Tuple[List[int], int]:
+        """
+        Sample a subset of clients uniformly.
         """
         if num_of_sampled > self.num_clients:
-            self.logger.warning("Requested number of clients exceeds available clients. Sampling all clients.")
+            self.logger.warning(
+                "Requested number of clients exceeds available clients. Sampling all clients."
+            )
+        sampled_clients = random.sample(range(self.num_clients), num_of_sampled)
+        ordered_clients, number_of_attackers_epoch = self._order_clients_by_attackers(sampled_clients)
+        self.logger.info(f"Sampled clients: {ordered_clients}")
+        return ordered_clients, number_of_attackers_epoch
+
+    def _sample_from_weights(self, weights: Dict[int, float], num_of_sampled: int) -> Tuple[List[int], int]:
+        """
+        Sample a subset of clients based on their weights.
+        """
+        if num_of_sampled > self.num_clients:
+            self.logger.warning(
+                "Requested number of clients exceeds available clients. Sampling all clients."
+            )
         # Filter out clients with weight 0
         filtered_weights = {client_id: weight for client_id, weight in weights.items() if weight > 0}
-        
-        # Normalize weights
         total_weight = sum(filtered_weights.values())
         normalized_weights = {client_id: weight / total_weight for client_id, weight in filtered_weights.items()}
         
-        # Sample clients based on normalized weights
         sampled_clients = np.random.choice(
             a=list(normalized_weights.keys()),
             p=list(normalized_weights.values()),
             size=num_of_sampled,
             replace=False
         )
-        attackers = [cid for cid in sampled_clients if cid < self.f]
-        number_of_attackers_epoch = len(attackers)
-        non_attackers = [cid for cid in sampled_clients if cid >= self.f]
-        sampled_clients = attackers + non_attackers #attackers are always sampled first
-        self.logger.info(f"Sampled clients: {sampled_clients}")
-        return sampled_clients , number_of_attackers_epoch
-        
+        ordered_clients, number_of_attackers_epoch = self._order_clients_by_attackers(list(sampled_clients))
+        self.logger.info(f"Sampled clients: {ordered_clients}")
+        return ordered_clients, number_of_attackers_epoch
 
     def run_federated_training(self):
-        """
-        Run the federated training process.
-
-        """
         self.logger.info("Starting federated training.")
         for epoch in range(1, self.global_epoch + 1):
             self.logger.info(f"Global Epoch {epoch} started.")
-            sampled_client_ids , number_of_attackers_epoch = self.sample_clients(self.sampled)  # Modify as needed
-
-            client_updates: List[Tuple[int, Dict[str, torch.Tensor]]] = []
-            for client_id in sampled_client_ids:
-                self.logger.info(f"Training client {client_id} for {self.local_epochs} local epochs.")
-                # Instantiate the Client with client_loader
-                client_loader = self.federated_data_loader.get_client_data(
-                    client_id=client_id,
-                    
-                )
-                client = Client(client_id, client_loader)
-                client_update = client.train(
-                    global_model=copy.deepcopy(self.global_model),  # Pass a copy of the global model
-                    local_epochs=self.local_epochs,
-                    learning_rate=self.learning_rate,
-                    device=torch.device(self.device),
-                )
-                client_updates.append((client_id, client_update))
-                # Client object is discarded after training
-
-            self.aggregate_client_updates(client_updates)
-            accuracy = self.evaluate_global_model(epoch)
+            # Choose sampling method as needed (here we use sample_clients)
+            sampled_client_ids, _ = self._sample_clients(self.sampled)
+            # Launch parallel training tasks using the helper method
+            client_updates = self._train_clients(sampled_client_ids)
+            self._aggregate_client_updates(client_updates)
+            accuracy = self._evaluate_global_model(epoch)
             self.logger.info(f"\033[94mGlobal Epoch {epoch} completed.\033[0m")
         self.logger.info("Federated training completed.")
         return accuracy
-        
 
-    def aggregate_client_updates(self, gradients: List[Tuple[int, Dict[str, torch.Tensor]]]):
+    def _aggregate_client_updates(self, gradients: List[Tuple[int, Dict[str, torch.Tensor]]]):
         """
         Aggregate client updates to update the global model.
 
@@ -265,11 +269,13 @@ class Server:
 
         aggregation_kwargs = self.aggregation_kwargs.copy() # Copy to avoid modifying the original dict
         
-        if self.aggregation_method.__name__ == 'KeTS' or self.aggregation_method.__name__ == 'DCT' or self.aggregation_method.__name__ == 'DCT_raw':
-            aggregation_kwargs['trust_scores'] = self.trust_scores
-            aggregation_kwargs['last_updates'] = self.last_updates
-            aggregation_kwargs['baseline_decreased_score'] = 0.005
-            aggregation_kwargs['last_global_update'] = self
+        if self.aggregation_method in {KeTS, DCT, DCT_raw, KeTSV2}:
+            aggregation_kwargs.update({
+            'trust_scores': self.trust_scores,
+            'last_updates': self.last_updates,
+            'baseline_decreased_score': 0.01,
+            'last_global_update': self
+            })
 
         # Call the selected aggregation method
         try:
@@ -286,7 +292,7 @@ class Server:
             self.logger.error(f"Aggregation failed: {e}")
             raise
 
-    def evaluate_global_model(self, epoch: int):
+    def _evaluate_global_model(self, epoch: int):
         """
         Evaluate the global model on the test dataset.
 
@@ -315,7 +321,7 @@ class Server:
         self.logger.info(f"Epoch {epoch} - Test Loss: {avg_loss:.4f}, Test Accuracy: {accuracy:.4f}")
         return accuracy
 
-    def save_global_model(self, filepath: str):
+    def _save_global_model(self, filepath: str):
         """
         Save the global model to a file.
 
@@ -325,7 +331,7 @@ class Server:
         torch.save(self.global_model.state_dict(), filepath)
         self.logger.info(f"Global model saved to {filepath}.")
 
-    def load_global_model(self, filepath: str):
+    def _load_global_model(self, filepath: str):
         """
         Load the global model from a file.
 
@@ -342,12 +348,12 @@ class AttackServer(Server):
     def __init__(self, attack_type: AttackType, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.attack_method = attacks[attack_type]
-        if self.aggregation_method == KeTS or self.aggregation_method == DCT or self.aggregation_method == DCT_raw:
-            self.trust_scores = {cid : 1.0 for cid in range(self.num_clients)}
-            self.last_updates = {cid : None for cid in range(self.num_clients)}
+        if self.aggregation_method in {KeTS, DCT, DCT_raw, KeTSV2}:
+            self.trust_scores = {cid: 1.0 for cid in range(self.num_clients)}
+            self.last_updates = {cid: None for cid in range(self.num_clients)}
             self.last_global_update = None
     
-    def compute_attack(self, updates, lr,num_attackers_epoch ,f):
+    def _compute_attack(self, updates, lr,num_attackers_epoch ,f):
         self.logger.info(f"{self.attack_method.__name__} attack computed.")
         if self.attack_method.__name__ in ['krum_attack', 'trim_attack']:
             return self.attack_method(updates, self.global_model, lr, f,num_attackers_epoch ,self.device)
@@ -358,56 +364,34 @@ class AttackServer(Server):
         self.logger.info("Starting federated training with attacks.")
         for epoch in range(1, self.global_epoch + 1):
             self.logger.info(f"Global Epoch {epoch} started.")
-            if self.aggregation_method == KeTS:
-                sampled_client_ids , number_of_attackers_epoch = self.sample_from_weights(self.trust_scores, self.sampled)
+            if self.aggregation_method in {KeTS, KeTSV2}:
+                sampled_client_ids , number_of_attackers_epoch = self._sample_from_weights(self.trust_scores, self.sampled)
             else:   
-                sampled_client_ids , number_of_attackers_epoch = self.sample_clients(self.sampled)
-            '''
-            client_updates = []
-            for client_id in sampled_client_ids:
-                client_loader = self.federated_data_loader.get_client_data(client_id=client_id)
-                client = Client(client_id, client_loader)
-                client_update = client.train(
-                    global_model=copy.deepcopy(self.global_model),
-                    local_epochs=self.local_epochs,
-                    learning_rate=self.learning_rate,
-                    device=torch.device(self.device),
-                )
-                client_updates.append((client_id, client_update))
-            '''
-            # Launch parallel training tasks
-            futures = [
-                train_client.remote(
-                    client_id,
-                    self.federated_data_loader.get_client_data(client_id),
-                    copy.deepcopy(self.global_model),
-                    self.local_epochs,
-                    self.learning_rate,
-                    self.device,
-                    self.local_dp
-                )
-                for client_id in sampled_client_ids
-            ]
+                sampled_client_ids , number_of_attackers_epoch = self._sample_clients(self.sampled)
+            # Use the common training helper
+            client_updates = self._train_clients(sampled_client_ids)
             
-            # Retrieve results
-            client_updates = ray.get(futures)
-            client_updates = list(zip(sampled_client_ids, client_updates))
-            
-            
-            # Extract only the weight updates, compute attacked updates, then reassign
+            # Extract updates, compute attacked updates, and update client_updates accordingly
             updates_list = [update['flattened_diffs'] for (_, update) in client_updates]
-            attacked_updates = self.compute_attack(updates_list, self.learning_rate,  number_of_attackers_epoch ,self.f)
+            attacked_updates = self._compute_attack(updates_list, self.learning_rate,  number_of_attackers_epoch ,self.f)
             for i, (cid, update) in enumerate(client_updates):
                 client_updates[i] = (cid, {'flattened_diffs' : attacked_updates[i] , 'data_size' : update['data_size']})
 
-            self.aggregate_client_updates(client_updates)
-            if self.aggregation_method == KeTS or self.aggregation_method == DCT or self.aggregation_method == DCT_raw:
+            self._aggregate_client_updates(client_updates)
+            if self.aggregation_method in {KeTS, DCT, DCT_raw, KeTSV2}:
                 for cid, attacked_update in client_updates:
-                    self.last_updates[cid] = attacked_update['flattened_diffs']
+                    if self.last_updates[cid] is None:
+                        self.last_updates[cid] = attacked_update['flattened_diffs']
+                    else:
+                        ema_alpha = 0.3
+                        self.last_updates[cid] = (
+                            ema_alpha * attacked_update['flattened_diffs'] +
+                            (1 - ema_alpha) * self.last_updates[cid]
+                        )
                 
             
     
-            accuracy = self.evaluate_global_model(epoch)
+            accuracy = self._evaluate_global_model(epoch)
 
             self.logger.info(f"Global Epoch {epoch} completed.")
         self.logger.info("Federated training with attacks completed.")
@@ -432,7 +416,7 @@ class FLTrust(AttackServer):
         self.aggregation_method = None
         
     
-    def fl_train_server(
+    def _fl_train_server(
         self,
         global_model: Module,
         local_epochs: int,
@@ -508,7 +492,7 @@ class FLTrust(AttackServer):
             'data_size': len(self.server_data_loader.dataset)        
         }
     
-    def fltrust_aggregation(self, gradients: List[Tuple[int, Dict[str, torch.Tensor]]],
+    def _fltrust_aggregation(self, gradients: List[Tuple[int, Dict[str, torch.Tensor]]],
                               net: torch.nn.Module,
                               lr: float,
                               f: int,
@@ -573,62 +557,29 @@ class FLTrust(AttackServer):
         self.logger.info("Starting federated training with attacks.")
         for epoch in range(1, self.global_epoch + 1):
             self.logger.info(f"Global Epoch {epoch} started.")
-            if self.aggregation_method == KeTS:
-                sampled_client_ids , number_of_attackers_epoch = self.sample_from_weights(self.trust_scores, self.sampled)
-            else:   
-                sampled_client_ids , number_of_attackers_epoch = self.sample_clients(self.sampled)
-            '''
-            client_updates = []
-            for client_id in sampled_client_ids:
-                client_loader = self.federated_data_loader.get_client_data(client_id=client_id)
-                client = Client(client_id, client_loader)
-                client_update = client.train(
-                    global_model=copy.deepcopy(self.global_model),
-                    local_epochs=self.local_epochs,
-                    learning_rate=self.learning_rate,
-                    device=torch.device(self.device),
-                )
-                client_updates.append((client_id, client_update))
-            '''
-            # Launch parallel training tasks
-            futures = [
-                train_client.remote(
-                    client_id,
-                    self.federated_data_loader.get_client_data(client_id),
-                    copy.deepcopy(self.global_model),
-                    self.local_epochs,
-                    self.learning_rate,
-                    self.device,
-                    self.local_dp
-                )
-                for client_id in sampled_client_ids
-            ]
+            # FLTrust may use a different sampling method; here we use sample_clients
+            sampled_client_ids, number_of_attackers_epoch = self._sample_clients(self.sampled)
             
-            # Retrieve results
-            client_updates = ray.get(futures)
-            client_updates = list(zip(sampled_client_ids, client_updates))
+            # Use the common training helper
+            client_updates = self._train_clients(sampled_client_ids)
             
-            
-            # Extract only the weight updates, compute attacked updates, then reassign
-            updates_list = [update['flattened_diffs'] for (_, update) in client_updates]
-            attacked_updates = self.compute_attack(updates_list, self.learning_rate,  number_of_attackers_epoch ,self.f)
-            for i, (cid, update) in enumerate(client_updates):
-                client_updates[i] = (cid, {'flattened_diffs' : attacked_updates[i] , 'data_size' : update['data_size']})
-
-            server_update = self.fl_train_server(
+            # Generate the server's trusted update and add it to client updates
+            server_update = self._fl_train_server(
                 global_model=copy.deepcopy(self.global_model),
                 local_epochs=self.local_epochs,
                 learning_rate=self.learning_rate,
                 device=torch.device(self.device),
             )
-            client_updates.append((-1,server_update))
+            client_updates.append((-1, server_update))
             
-            self.fltrust_aggregation(client_updates, self.global_model, self.learning_rate, self.f, torch.device(self.device)) 
-            
-    
-            accuracy = self.evaluate_global_model(epoch)
-
+            self._fltrust_aggregation(
+                client_updates,
+                self.global_model,
+                self.learning_rate,
+                self.f,
+                torch.device(self.device)
+            )
+            accuracy = self._evaluate_global_model(epoch)
             self.logger.info(f"Global Epoch {epoch} completed.")
-        
         self.logger.info("Federated training with attacks completed.")
         return accuracy

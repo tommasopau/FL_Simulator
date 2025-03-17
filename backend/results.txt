@@ -1,5 +1,5 @@
 Simulation Result
-Accuracy: 0.7794
+Accuracy: 0.7179
 Configuration:
 {
     "model": {
@@ -14,15 +14,15 @@ Configuration:
         "global_epochs": 30,
         "learning_rate": 0.001,
         "local_epochs": 4,
-        "num_attackers": 20,
+        "num_attackers": 26,
         "partition_type": "non-iid",
         "sampled_clients": 50,
         "seed": 42,
         "local_DP_SGD": false,
-        "aggregation_strategy": "DCT"
+        "aggregation_strategy": "KeTSV2"
     }
 }Simulation Result
-Accuracy: 0.6333
+Accuracy: 0.1088
 Configuration:
 {
     "model": {
@@ -37,53 +37,7 @@ Configuration:
         "global_epochs": 30,
         "learning_rate": 0.001,
         "local_epochs": 4,
-        "num_attackers": 20,
-        "partition_type": "non-iid",
-        "sampled_clients": 50,
-        "seed": 42,
-        "local_DP_SGD": false,
-        "aggregation_strategy": "FLTRUST"
-    }
-}Simulation Result
-Accuracy: 0.6631
-Configuration:
-{
-    "model": {
-        "type": "FNet"
-    },
-    "federated_learning": {
-        "dataset": "fashion_mnist",
-        "num_clients": 50,
-        "alpha": 0.5,
-        "attack": "LABEL_FLIP",
-        "batch_size": 64,
-        "global_epochs": 30,
-        "learning_rate": 0.001,
-        "local_epochs": 4,
-        "num_attackers": 20,
-        "partition_type": "non-iid",
-        "sampled_clients": 50,
-        "seed": 42,
-        "local_DP_SGD": false,
-        "aggregation_strategy": "KeTS"
-    }
-}Simulation Result
-Accuracy: 0.7575
-Configuration:
-{
-    "model": {
-        "type": "FNet"
-    },
-    "federated_learning": {
-        "dataset": "fashion_mnist",
-        "num_clients": 50,
-        "alpha": 0.5,
-        "attack": "LABEL_FLIP",
-        "batch_size": 64,
-        "global_epochs": 30,
-        "learning_rate": 0.001,
-        "local_epochs": 4,
-        "num_attackers": 20,
+        "num_attackers": 26,
         "partition_type": "non-iid",
         "sampled_clients": 50,
         "seed": 42,
@@ -91,7 +45,7 @@ Configuration:
         "aggregation_strategy": "MEDIAN"
     }
 }Simulation Result
-Accuracy: 0.7578
+Accuracy: 0.6965
 Configuration:
 {
     "model": {
@@ -106,55 +60,7 @@ Configuration:
         "global_epochs": 30,
         "learning_rate": 0.001,
         "local_epochs": 4,
-        "num_attackers": 20,
-        "partition_type": "non-iid",
-        "sampled_clients": 50,
-        "seed": 42,
-        "local_DP_SGD": false,
-        "aggregation_strategy": "TRIM_MEAN"
-    }
-}Simulation Result
-
-
-Accuracy: 0.6602
-Configuration:
-{
-    "model": {
-        "type": "FNet"
-    },
-    "federated_learning": {
-        "dataset": "fashion_mnist",
-        "num_clients": 50,
-        "alpha": 0.5,
-        "attack": "LABEL_FLIP",
-        "batch_size": 64,
-        "global_epochs": 30,
-        "learning_rate": 0.001,
-        "local_epochs": 4,
-        "num_attackers": 20,
-        "partition_type": "non-iid",
-        "sampled_clients": 50,
-        "seed": 42,
-        "local_DP_SGD": false,
-        "aggregation_strategy": "FEDAVG"
-    }
-}Simulation Result
-Accuracy: 0.6983
-Configuration:
-{
-    "model": {
-        "type": "FNet"
-    },
-    "federated_learning": {
-        "dataset": "fashion_mnist",
-        "num_clients": 50,
-        "alpha": 0.5,
-        "attack": "LABEL_FLIP",
-        "batch_size": 64,
-        "global_epochs": 30,
-        "learning_rate": 0.001,
-        "local_epochs": 4,
-        "num_attackers": 20,
+        "num_attackers": 26,
         "partition_type": "non-iid",
         "sampled_clients": 50,
         "seed": 42,
@@ -162,122 +68,7 @@ Configuration:
         "aggregation_strategy": "KRUM"
     }
 }Simulation Result
-Accuracy: 0.6122
-Configuration:
-{
-    "model": {
-        "type": "FNet"
-    },
-    "federated_learning": {
-        "dataset": "fashion_mnist",
-        "num_clients": 50,
-        "alpha": 0.5,
-        "attack": "SIGN_FLIP",
-        "batch_size": 64,
-        "global_epochs": 30,
-        "learning_rate": 0.001,
-        "local_epochs": 4,
-        "num_attackers": 20,
-        "partition_type": "non-iid",
-        "sampled_clients": 50,
-        "seed": 42,
-        "local_DP_SGD": false,
-        "aggregation_strategy": "KeTS"
-    }
-}Simulation Result
-Accuracy: 0.7831
-Configuration:
-{
-    "model": {
-        "type": "FNet"
-    },
-    "federated_learning": {
-        "dataset": "fashion_mnist",
-        "num_clients": 50,
-        "alpha": 0.5,
-        "attack": "MIN_MAX",
-        "batch_size": 64,
-        "global_epochs": 30,
-        "learning_rate": 0.001,
-        "local_epochs": 4,
-        "num_attackers": 20,
-        "partition_type": "non-iid",
-        "sampled_clients": 50,
-        "seed": 42,
-        "local_DP_SGD": false,
-        "aggregation_strategy": "DCT"
-    }
-}Simulation Result
-Accuracy: 0.7833
-Configuration:
-{
-    "model": {
-        "type": "FNet"
-    },
-    "federated_learning": {
-        "dataset": "fashion_mnist",
-        "num_clients": 50,
-        "alpha": 0.5,
-        "attack": "MIN_MAX",
-        "batch_size": 64,
-        "global_epochs": 30,
-        "learning_rate": 0.001,
-        "local_epochs": 4,
-        "num_attackers": 20,
-        "partition_type": "non-iid",
-        "sampled_clients": 50,
-        "seed": 42,
-        "local_DP_SGD": false,
-        "aggregation_strategy": "DCT"
-    }
-}Simulation Result
-Accuracy: 0.7042
-Configuration:
-{
-    "model": {
-        "type": "FNet"
-    },
-    "federated_learning": {
-        "dataset": "fashion_mnist",
-        "num_clients": 50,
-        "alpha": 0.5,
-        "attack": "SIGN_FLIP",
-        "batch_size": 64,
-        "global_epochs": 30,
-        "learning_rate": 0.001,
-        "local_epochs": 4,
-        "num_attackers": 20,
-        "partition_type": "non-iid",
-        "sampled_clients": 50,
-        "seed": 42,
-        "local_DP_SGD": false,
-        "aggregation_strategy": "DCT"
-    }
-}Simulation Result
-Accuracy: 0.7618
-Configuration:
-{
-    "model": {
-        "type": "FNet"
-    },
-    "federated_learning": {
-        "dataset": "fashion_mnist",
-        "num_clients": 50,
-        "alpha": 0.5,
-        "attack": "SIGN_FLIP",
-        "batch_size": 64,
-        "global_epochs": 30,
-        "learning_rate": 0.001,
-        "local_epochs": 4,
-        "num_attackers": 20,
-        "partition_type": "non-iid",
-        "sampled_clients": 50,
-        "seed": 42,
-        "local_DP_SGD": false,
-        "aggregation_strategy": "DCT"
-    }
-}Simulation Result
-Accuracy: 0.7955
+Accuracy: 0.806
 Configuration:
 {
     "model": {
@@ -292,15 +83,15 @@ Configuration:
         "global_epochs": 30,
         "learning_rate": 0.001,
         "local_epochs": 4,
-        "num_attackers": 20,
+        "num_attackers": 26,
         "partition_type": "non-iid",
         "sampled_clients": 50,
         "seed": 42,
         "local_DP_SGD": false,
-        "aggregation_strategy": "DCT"
+        "aggregation_strategy": "KeTSV2"
     }
 }Simulation Result
-Accuracy: 0.6505
+Accuracy: 0.604
 Configuration:
 {
     "model": {
@@ -310,12 +101,12 @@ Configuration:
         "dataset": "fashion_mnist",
         "num_clients": 50,
         "alpha": 0.5,
-        "attack": "SIGN_FLIP",
+        "attack": "LABEL_FLIP",
         "batch_size": 64,
         "global_epochs": 30,
         "learning_rate": 0.001,
         "local_epochs": 4,
-        "num_attackers": 20,
+        "num_attackers": 26,
         "partition_type": "non-iid",
         "sampled_clients": 50,
         "seed": 42,
@@ -323,7 +114,7 @@ Configuration:
         "aggregation_strategy": "FLTRUST"
     }
 }Simulation Result
-Accuracy: 0.6516
+Accuracy: 0.7966
 Configuration:
 {
     "model": {
@@ -338,15 +129,15 @@ Configuration:
         "global_epochs": 30,
         "learning_rate": 0.001,
         "local_epochs": 4,
-        "num_attackers": 20,
+        "num_attackers": 26,
         "partition_type": "non-iid",
         "sampled_clients": 50,
         "seed": 42,
         "local_DP_SGD": false,
-        "aggregation_strategy": "FLTRUST"
+        "aggregation_strategy": "KeTSV2"
     }
 }Simulation Result
-Accuracy: 0.6187
+Accuracy: 0.8112
 Configuration:
 {
     "model": {
@@ -361,176 +152,15 @@ Configuration:
         "global_epochs": 30,
         "learning_rate": 0.001,
         "local_epochs": 4,
-        "num_attackers": 20,
+        "num_attackers": 10,
         "partition_type": "non-iid",
         "sampled_clients": 50,
         "seed": 42,
         "local_DP_SGD": false,
-        "aggregation_strategy": "MEDIAN"
+        "aggregation_strategy": "KeTSV2"
     }
 }Simulation Result
-Accuracy: 0.6213
-Configuration:
-{
-    "model": {
-        "type": "FNet"
-    },
-    "federated_learning": {
-        "dataset": "fashion_mnist",
-        "num_clients": 50,
-        "alpha": 0.5,
-        "attack": "SIGN_FLIP",
-        "batch_size": 64,
-        "global_epochs": 30,
-        "learning_rate": 0.001,
-        "local_epochs": 4,
-        "num_attackers": 20,
-        "partition_type": "non-iid",
-        "sampled_clients": 50,
-        "seed": 42,
-        "local_DP_SGD": false,
-        "aggregation_strategy": "TRIM_MEAN"
-    }
-}Simulation Result
-Accuracy: 0.6
-Configuration:
-{
-    "model": {
-        "type": "FNet"
-    },
-    "federated_learning": {
-        "dataset": "fashion_mnist",
-        "num_clients": 50,
-        "alpha": 0.5,
-        "attack": "SIGN_FLIP",
-        "batch_size": 64,
-        "global_epochs": 30,
-        "learning_rate": 0.001,
-        "local_epochs": 4,
-        "num_attackers": 20,
-        "partition_type": "non-iid",
-        "sampled_clients": 50,
-        "seed": 42,
-        "local_DP_SGD": false,
-        "aggregation_strategy": "KRUM"
-    }
-}Simulation Result
-Accuracy: 0.7823
-Configuration:
-{
-    "model": {
-        "type": "FNet"
-    },
-    "federated_learning": {
-        "dataset": "fashion_mnist",
-        "num_clients": 50,
-        "alpha": 0.5,
-        "attack": "SIGN_FLIP",
-        "batch_size": 64,
-        "global_epochs": 30,
-        "learning_rate": 0.001,
-        "local_epochs": 4,
-        "num_attackers": 20,
-        "partition_type": "non-iid",
-        "sampled_clients": 50,
-        "seed": 42,
-        "local_DP_SGD": false,
-        "aggregation_strategy": "DCT"
-    }
-}Simulation Result
-Accuracy: 0.7865
-Configuration:
-{
-    "model": {
-        "type": "FNet"
-    },
-    "federated_learning": {
-        "dataset": "fashion_mnist",
-        "num_clients": 50,
-        "alpha": 0.5,
-        "attack": "KRUM",
-        "batch_size": 64,
-        "global_epochs": 30,
-        "learning_rate": 0.001,
-        "local_epochs": 4,
-        "num_attackers": 20,
-        "partition_type": "non-iid",
-        "sampled_clients": 50,
-        "seed": 42,
-        "local_DP_SGD": false,
-        "aggregation_strategy": "DCT"
-    }
-}Simulation Result
-Accuracy: 0.765
-Configuration:
-{
-    "model": {
-        "type": "FNet"
-    },
-    "federated_learning": {
-        "dataset": "fashion_mnist",
-        "num_clients": 50,
-        "alpha": 0.5,
-        "attack": "MIN_MAX_V2",
-        "batch_size": 64,
-        "global_epochs": 30,
-        "learning_rate": 0.001,
-        "local_epochs": 4,
-        "num_attackers": 20,
-        "partition_type": "non-iid",
-        "sampled_clients": 50,
-        "seed": 42,
-        "local_DP_SGD": false,
-        "aggregation_strategy": "DCT"
-    }
-}Simulation Result
-Accuracy: 0.7752
-Configuration:
-{
-    "model": {
-        "type": "FNet"
-    },
-    "federated_learning": {
-        "dataset": "fashion_mnist",
-        "num_clients": 50,
-        "alpha": 0.5,
-        "attack": "MIN_MAX_V2",
-        "batch_size": 64,
-        "global_epochs": 30,
-        "learning_rate": 0.001,
-        "local_epochs": 4,
-        "num_attackers": 20,
-        "partition_type": "non-iid",
-        "sampled_clients": 50,
-        "seed": 42,
-        "local_DP_SGD": false,
-        "aggregation_strategy": "KeTS"
-    }
-}Simulation Result
-Accuracy: 0.6152
-Configuration:
-{
-    "model": {
-        "type": "FNet"
-    },
-    "federated_learning": {
-        "dataset": "fashion_mnist",
-        "num_clients": 50,
-        "alpha": 0.5,
-        "attack": "SIGN_FLIP",
-        "batch_size": 64,
-        "global_epochs": 30,
-        "learning_rate": 0.001,
-        "local_epochs": 4,
-        "num_attackers": 20,
-        "partition_type": "non-iid",
-        "sampled_clients": 50,
-        "seed": 42,
-        "local_DP_SGD": false,
-        "aggregation_strategy": "KeTS"
-    }
-}Simulation Result
-Accuracy: 0.7896
+Accuracy: 0.8091
 Configuration:
 {
     "model": {
@@ -545,15 +175,15 @@ Configuration:
         "global_epochs": 30,
         "learning_rate": 0.001,
         "local_epochs": 4,
-        "num_attackers": 20,
+        "num_attackers": 10,
         "partition_type": "non-iid",
         "sampled_clients": 50,
         "seed": 42,
         "local_DP_SGD": false,
-        "aggregation_strategy": "DCT"
+        "aggregation_strategy": "KeTSV2"
     }
 }Simulation Result
-Accuracy: 0.7951
+Accuracy: 0.7982
 Configuration:
 {
     "model": {
@@ -568,80 +198,11 @@ Configuration:
         "global_epochs": 30,
         "learning_rate": 0.001,
         "local_epochs": 4,
-        "num_attackers": 20,
+        "num_attackers": 15,
         "partition_type": "non-iid",
         "sampled_clients": 50,
         "seed": 42,
         "local_DP_SGD": false,
-        "aggregation_strategy": "DCT"
-    }
-}Simulation Result
-Accuracy: 0.7207
-Configuration:
-{
-    "model": {
-        "type": "FNet"
-    },
-    "federated_learning": {
-        "dataset": "fashion_mnist",
-        "num_clients": 50,
-        "alpha": 0.5,
-        "attack": "SIGN_FLIP",
-        "batch_size": 64,
-        "global_epochs": 30,
-        "learning_rate": 0.001,
-        "local_epochs": 4,
-        "num_attackers": 20,
-        "partition_type": "non-iid",
-        "sampled_clients": 50,
-        "seed": 42,
-        "local_DP_SGD": false,
-        "aggregation_strategy": "DCT_raw"
-    }
-}Simulation Result
-Accuracy: 0.7652
-Configuration:
-{
-    "model": {
-        "type": "FNet"
-    },
-    "federated_learning": {
-        "dataset": "fashion_mnist",
-        "num_clients": 50,
-        "alpha": 0.5,
-        "attack": "SIGN_FLIP",
-        "batch_size": 64,
-        "global_epochs": 30,
-        "learning_rate": 0.001,
-        "local_epochs": 4,
-        "num_attackers": 20,
-        "partition_type": "non-iid",
-        "sampled_clients": 50,
-        "seed": 42,
-        "local_DP_SGD": false,
-        "aggregation_strategy": "DCT"
-    }
-}Simulation Result
-Accuracy: 0.7153
-Configuration:
-{
-    "model": {
-        "type": "FNet"
-    },
-    "federated_learning": {
-        "dataset": "fashion_mnist",
-        "num_clients": 50,
-        "alpha": 0.5,
-        "attack": "SIGN_FLIP",
-        "batch_size": 64,
-        "global_epochs": 30,
-        "learning_rate": 0.001,
-        "local_epochs": 4,
-        "num_attackers": 20,
-        "partition_type": "non-iid",
-        "sampled_clients": 50,
-        "seed": 42,
-        "local_DP_SGD": false,
-        "aggregation_strategy": "DCT_raw"
+        "aggregation_strategy": "KeTSV2"
     }
 }
