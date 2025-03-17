@@ -1,8 +1,40 @@
 # FL Simulator
 
-# FL Simulator
 
-FL Simulator is a federated learning simulation platform. The project consists of a Python-based backend and a [Streamlit](https://streamlit.io) frontend, enabling you to configure parameters, run simulations, and execute queries interactively. It also offers various attack and defense schemes to help study the robustness and security of federated learning settings.
+FL Simulator is a federated learning simulation platform that leverages [Ray](https://www.ray.io) for parallel training, significantly speeding up simulations and optimizing resource usage. The project consists of a Python-based backend and a [Streamlit](https://streamlit.io) frontend, enabling you to configure parameters, run simulations, and execute queries interactively. It also offers various attack and defense schemes to study the robustness and security of federated learning settings.
+
+## Key Features
+
+- **Attack Schemes:**  
+  Supports a wide range of adversarial attacks such as:
+  - **Label Flip Attacks**  
+  - **Min-Max & Min-Sum Attacks**  
+  - **Krum & Trim Attacks**  
+  - **Gaussian**
+  - **Sign Flip Attacks** 
+  - **Advanced Variants (e.g., MIN_MAX_V2, MIN_SUM_V2)**
+  
+- **Defense Mechanisms:**  
+  Integrated defenses include aggregation strategies like:
+  - **FEDAVG, KRUM, MEDIAN, TRIM_MEAN**  
+  - **KeTS & DWT-based Methods**  
+  - **FLTRUST** and other custom schemes to mitigate the impact of attacks.
+  
+- **Datasets & Models:**  
+  The platform supports several popular datasets and model architectures, including:
+  - **Datasets:** MNIST, Fashion-MNIST, and more.
+  
+  
+- **Differential Privacy:**  
+  Leverages [Opacus](https://opacus.ai/) to incorporate differential privacy, ensuring that simulation experiments can be conducted in a privacy-preserving manner.
+  
+- **Modular & Extensible:**  
+  Designed in a highly modular fashion so that new attacks, defense techniques, datasets, or models can be easily integrated. The backend includes a Flask API and a Streamlit frontend for interactive configuration and monitoring.
+  
+- **Logging & Querying:**  
+  Provides rich logging functionality and exposes a dedicated endpoint for querying a SQL database storing all past experiments, enabling you to retrieve historical simulation data easily.
+
+FL Simulator empowers you to perform comprehensive experiments on the robustness and security of federated learning, providing a platform that is ideal for academic research and industrial applications.
 
 ## Project Structure
 
