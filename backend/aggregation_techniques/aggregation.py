@@ -249,7 +249,7 @@ def KeTS(
 
             
     trust_scores_sampled = np.array([trust_scores[cid] for cid,_ in gradients])
-    last_segment = segmentation(trust_scores_sampled)
+    last_segment = segmentation(trust_scores_sampled , 'gaussian')
     
     honest_updates = [(cid,gradient) for cid,gradient in gradients if trust_scores[cid] >= last_segment]
     logger.info(f"Attacker clients: {[cid for cid,_ in gradients if trust_scores[cid] < last_segment]}")
@@ -842,27 +842,18 @@ def KeTSV2(
     lr: float,
     f: int,
     device: torch.device,
-    trust_scores: Dict[int,float],
+    trust_scores: Dict[int, float],
     last_updates: Dict[int, torch.Tensor],
     baseline_decreased_score: float,
     **kwargs
 ) -> None:
-    """
-    KeTS aggregation method.
-
-    Args:
-        gradients (List[torch.Tensor]): List of gradients from the clients.
-        net (nn.Module): The global model to be updated.
-        lr (float): Learning rate.
-        f (int): Number of malicious clients.
-        device (torch.device): Computation device.
-        trust_scores (List[float]): Trust scores for each client.
-        last_updates (Dict[int, torch.Tensor]): Last updates from each client.
-        **kwargs: Additional keyword arguments.
-    """
     logger.info("Aggregating gradients using KeTSV2.")
     server = kwargs.get('last_global_update', None)
-    # check step-----
+    
+    
+
+    
+    '''
     check_clients = [30] #3132
     if check_clients is not None and all(update is None for update in last_updates.values()):
         honest_updates = gradients
@@ -907,7 +898,7 @@ def KeTSV2(
         server.last_global_update = global_update
         return
     '''
-    --MEDIAN round 1
+    #MEDIAN round 1
     if all(update is None for update in last_updates.values()):
         grads = [gradient[1]['flattened_diffs'] for gradient in gradients]
         # Stack gradients into a tensor of shape (n_clients, n_params)
@@ -916,7 +907,7 @@ def KeTSV2(
         update_global_model(net, global_update, device)
         server.last_global_update = global_update
         return
-    '''
+    
     for cid,gradient in gradients:
         if last_updates[cid] is not None:
             flat_update1 = gradient['flattened_diffs'].view(-1)
@@ -938,6 +929,35 @@ def KeTSV2(
     trust_scores_sampled = np.array([trust_scores[cid] for cid,_ in gradients])
     last_segment = segmentation(trust_scores_sampled , 'gaussian')
     logger.info(f"Segmentation threshold vertycal analyses: {last_segment}")
+    #--Colluding detection
+    
+    # --- Compute colluding metrics ---
+    # For each client, compute cosine similarity with all other clients.
+    # For each similarity > 0.90, increase its colluding score.
+    colluding_scores = {}
+    n = len(gradients)
+    for i in range(n):
+        cid_i, grad_i = gradients[i]
+        score = 0
+        flat_i = grad_i['flattened_diffs'].view(-1)
+        for j in range(n):
+            if i == j:
+                continue
+            _, grad_j = gradients[j]
+            flat_j = grad_j['flattened_diffs'].view(-1)
+            sim = F.cosine_similarity(flat_i, flat_j, dim=0).item()
+            if sim > 0.92:
+                score += 1
+        colluding_scores[cid_i] = score
+    logger.info(f"Colluding scores: {colluding_scores}")
+    
+    # --- Remove colluding clients from aggregation ---
+    non_colluding_gradients = [(cid, grad) for cid, grad in gradients if colluding_scores[cid] == 0]
+    if not non_colluding_gradients:
+        logger.warning("All clients detected as colluding. Falling back to aggregating all gradients.")
+        non_colluding_gradients = gradients
+    gradients = non_colluding_gradients
+    
     
     honest_updates = [(cid,gradient) for cid,gradient in gradients if trust_scores[cid] >= last_segment]
     logger.info(f"Attacker clients vertical analyses: {[cid for cid,_ in gradients if trust_scores[cid] < last_segment]}")

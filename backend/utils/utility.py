@@ -26,7 +26,7 @@ def segmentation(trust_scores: np.ndarray, kernel : str) -> float:
     kde = KernelDensity(kernel=kernel, bandwidth=bandwidth).fit(trust_scores.reshape(-1,1))
         
     # Generate density values for the trust scores
-    x_d = np.linspace(trust_scores.min() - 1, trust_scores.max() + 1, 1000000)
+    x_d = np.linspace(trust_scores.min() - 1, trust_scores.max() + 1, 100000)
     log_density = kde.score_samples(x_d.reshape(-1, 1))
     density = np.exp(log_density)
         

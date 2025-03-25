@@ -21,6 +21,11 @@ ALLOWED_FILTERS = {
     # Boolean Fields
     "local_DP_SGD": ["eq"],
     
-    # Optional: Include 'id' if needed for administrative queries
-    # "id": ["eq", "gt", "lt", "gte", "lte"],
+    
+}
+
+NORMALIZATION_PARAMS = {
+    "mnist": ((0.1307,), (0.3081,)),
+    "fashion_mnist": ((0.2860,), (0.3530,)),
+    # Add additional dataset normalization parameters here.
 }

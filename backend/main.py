@@ -25,7 +25,7 @@ session = get_session(engine)
 
 CONFIG_OVERRIDES = {}  
 
-@app.route('/api/config', methods=['POST'])
+@app.route('/configuration', methods=['POST'])
 def update_config():
     logger = logging.getLogger(__name__)
     global CONFIG_OVERRIDES
@@ -35,7 +35,7 @@ def update_config():
     return jsonify({"status": "config updated"}), 200
 
 
-@app.route('/start', methods=['GET'])
+@app.route('/simulation', methods=['GET'])
 def start_federated_learning():
     
 
@@ -187,7 +187,7 @@ def start_federated_learning():
         
 
 
-@app.route('/api/query', methods=['POST'])
+@app.route('/query', methods=['POST'])
 def execute_query():
     logger = logging.getLogger(__name__)
     filters = request.json.get('filters', [])

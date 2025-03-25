@@ -55,7 +55,7 @@ class Client:
         
         client_model.train()
         # Define optimizer and loss function
-        optimizer = optim.SGD(client_model.parameters(), lr=learning_rate , momentum=0.9) 
+        optimizer = optim.SGD(client_model.parameters(), lr=learning_rate ) #momentum=0.9
         #optimizer = optim.Adam(client_model.parameters(), lr=learning_rate)
         criterion = nn.CrossEntropyLoss()
 

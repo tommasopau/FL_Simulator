@@ -1,19 +1,17 @@
 federated_learning:
-  aggregation_strategy: MEDIAN
+  aggregation_strategy: KeTSV2
   alpha: 0.5
-  attack: MIN_MAX_V2
+  attack: MIN_MAX
   batch_size: 64
-  dataset: fashion_mnist
-  global_epochs: 30
+  dataset: mnist
+  global_epochs: 20
   learning_rate: 0.001
-  local_epochs: 4
-  num_attackers: 15
+  local_DP_SGD: false
+  local_epochs: 5
+  num_attackers: 10
   num_clients: 50
   partition_type: non-iid
-  sampled_clients: 50 #all
+  sampled_clients: 50
   seed: 42
-  local_DP_SGD: False
 model:
-  type: FNet
-
-
+  type: FCMNIST

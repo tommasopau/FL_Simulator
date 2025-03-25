@@ -1,6 +1,5 @@
 import logging
-from utils.logger import setup_logger
-
+from utils.constants import NORMALIZATION_PARAMS
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import random
@@ -15,11 +14,12 @@ from typing import List
 
 class DatasetUtils:
     @staticmethod
-    def apply_transforms(batch) -> dict:
+    def apply_transforms(batch , dataset_type: str) -> dict:
         """
         Apply transformations to the images in the dataset.
         """
-        pytorch_transforms = Compose([ToTensor(), Normalize((0.1307,), (0.3081,))]) #Mnist Value -> add fashion_mnist (0.1307,), (0.3081,
+        mean, std = NORMALIZATION_PARAMS.get(dataset_type, ((0.5,), (0.5,)))
+        pytorch_transforms = Compose([ToTensor(), Normalize(mean , std)]) #Mnist Value -> add fashion_mnist (0.1307,), (0.3081,
         batch["image"] = [pytorch_transforms(img) for img in batch["image"]]
         return batch
     
@@ -75,7 +75,8 @@ class DatasetHandler:
         Apply transformations to each client's dataset.
         """
         self.logger.info("Applying transformations to client datasets.")
-        self.client_datasets = [client_dataset.with_transform(DatasetUtils.apply_transforms) 
+        transform = lambda batch: DatasetUtils.apply_transforms(batch, dataset_type=self.datasetID)
+        self.client_datasets = [client_dataset.with_transform(transform) 
                                 for client_dataset in self.client_datasets]
         self.logger.info("Transformations applied to all client datasets.")
 
@@ -85,7 +86,8 @@ class DatasetHandler:
         """
         self.logger.info("Loading test dataset.")
         test_dataset = self.fds.load_split("test")
-        transformed_test = test_dataset.with_transform(DatasetUtils.apply_transforms)
+        transform = lambda batch: DatasetUtils.apply_transforms(batch, dataset_type=self.datasetID)
+        transformed_test = test_dataset.with_transform(transform)
         self.logger.info("Test dataset loaded and transformed.")
         return transformed_test
     
@@ -96,6 +98,7 @@ class DatasetHandler:
         For example, with num_classes=10, the mapping is {0: 1, 1: 2, ..., 9: 0}.
         """
         return {i: (i + 1) % num_classes for i in range(num_classes)}
+        
 
     def attack_client_datasets_structured(self, attacked_clients: list, flip_percentage: float, num_classes: int = 10, mapping: dict = None):
         """
@@ -163,7 +166,8 @@ def server_dataset(datasetID: str, batch_size: int, device: str) -> DataLoader:
         Load the server dataset for FLTRUST
         """
         fds = FederatedDataset(dataset=datasetID, partitioners={"train": IidPartitioner(num_partitions=600)})
-        server_dataset = fds.load_partition(0).with_transform(DatasetUtils.apply_transforms)
+        transform = lambda batch: DatasetUtils.apply_transforms(batch, dataset_type=datasetID)
+        server_dataset = fds.load_partition(0).with_transform(transform)
         return DataLoader(
             server_dataset,
             batch_size=batch_size,

@@ -28,7 +28,7 @@ from client import Client
 from attacks import (
     min_max_attack, min_sum_attack, krum_attack, trim_attack, no_attack,
     gaussian_attack, label_flip_attack, min_max_attack_variant, sign_flip_attack,
-    min_sum_attack_variant
+    min_sum_attack_variant , min_max_attack_variant2
 )
 
 
@@ -70,6 +70,7 @@ class AttackType(Enum):
     MIN_MAX_V2 = auto()
     MIN_SUM_V2 = auto()
     SIGN_FLIP = auto()
+    MIN_MAX_V3 = auto()
     
 #Enumeration that is later mapped to each attack method. The auto() function is used to automatically assign unique values to each member.
 
@@ -83,7 +84,8 @@ attacks = {
     AttackType.LABEL_FLIP: label_flip_attack,
     AttackType.MIN_MAX_V2: min_max_attack_variant,
     AttackType.MIN_SUM_V2: min_sum_attack_variant,
-    AttackType.SIGN_FLIP: sign_flip_attack
+    AttackType.SIGN_FLIP: sign_flip_attack,
+    AttackType.MIN_MAX_V3: min_max_attack_variant2
     
 }
 @ray.remote
@@ -273,7 +275,7 @@ class Server:
             aggregation_kwargs.update({
             'trust_scores': self.trust_scores,
             'last_updates': self.last_updates,
-            'baseline_decreased_score': 0.01,
+            'baseline_decreased_score': 0.02,
             'last_global_update': self
             })
 
