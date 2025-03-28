@@ -22,13 +22,12 @@ from enum import Enum, auto
 import copy
 import random
 import ray  
-
-from dataset import FederatedDataLoader
+from dataset.dataset import FederatedDataLoader
 from client import Client
 from attacks import (
     min_max_attack, min_sum_attack, krum_attack, trim_attack, no_attack,
-    gaussian_attack, label_flip_attack, min_max_attack_variant, sign_flip_attack,
-    min_sum_attack_variant , min_max_attack_variant2
+    gaussian_attack, label_flip_attack, min_max_attack_rand_noise, sign_flip_attack,
+    min_sum_attack_rand_noise , min_max_attack_ortho , min_sum_attack_ortho
 )
 
 
@@ -71,6 +70,7 @@ class AttackType(Enum):
     MIN_SUM_V2 = auto()
     SIGN_FLIP = auto()
     MIN_MAX_V3 = auto()
+    MIN_SUM_V3 = auto()
     
 #Enumeration that is later mapped to each attack method. The auto() function is used to automatically assign unique values to each member.
 
@@ -82,10 +82,11 @@ attacks = {
     AttackType.NO_ATTACK: no_attack,
     AttackType.GAUSSIAN: gaussian_attack,
     AttackType.LABEL_FLIP: label_flip_attack,
-    AttackType.MIN_MAX_V2: min_max_attack_variant,
-    AttackType.MIN_SUM_V2: min_sum_attack_variant,
+    AttackType.MIN_MAX_V2: min_max_attack_rand_noise,
+    AttackType.MIN_SUM_V2: min_sum_attack_rand_noise,
     AttackType.SIGN_FLIP: sign_flip_attack,
-    AttackType.MIN_MAX_V3: min_max_attack_variant2
+    AttackType.MIN_MAX_V3: min_max_attack_ortho,
+    AttackType.MIN_SUM_V3: min_sum_attack_ortho
     
 }
 @ray.remote
@@ -310,7 +311,17 @@ class Server:
 
         with torch.no_grad():
             for batch in self.test_loader:
-                inputs, labels = batch['image'].to(self.device), batch['label'].to(self.device)
+                # Handle batch as dict (image data) or tuple/list (tabular data)
+                if isinstance(batch, dict):
+                    inputs = batch['image'].to(self.device)
+                    labels = batch['label'].to(self.device)
+                elif isinstance(batch, (tuple, list)) and len(batch) == 2:
+                    inputs, labels = batch
+                    inputs = inputs.to(self.device)
+                    labels = labels.squeeze().to(self.device)
+                else:
+                    raise ValueError("Unexpected batch format in test_loader. Expected dict with keys ('image','label') or tuple (features, labels).")
+                
                 outputs = self.global_model(inputs)
                 loss = loss_fn(outputs, labels)
                 total_loss += loss.item() * inputs.size(0)
@@ -463,21 +474,30 @@ class FLTrust(AttackServer):
         for epoch in range(local_epochs):
             
             for batch_idx, batch in enumerate(self.server_data_loader):
-                images = batch['image'].to(device)
-                labels = batch['label'].to(device)
+                if isinstance(batch, dict):
+                    inputs = batch['image'].to(device)
+                    targets = batch['label'].to(device)
+                elif isinstance(batch, (tuple, list)) and len(batch) == 2:
+                    inputs, targets = batch
+                    inputs = inputs.to(device)
+                    if targets.ndim == 2 and targets.size(1) == 1:
+                        targets = targets.squeeze(1)
+                    targets = targets.to(device)
+                else:
+                    raise ValueError("Unexpected batch format. Expected dict with keys ('image','label') or tuple (features, labels).")
 
                 optimizer.zero_grad(set_to_none=True)
 
                 if use_amp:
                     with torch.amp.autocast('cuda'):
-                        outputs = server_model(images)
-                        loss = criterion(outputs, labels)
+                        outputs = server_model(inputs)
+                        loss = criterion(outputs, targets)
                     scaler.scale(loss).backward()
                     scaler.step(optimizer)
                     scaler.update()
                 else:
-                    outputs = server_model(images)
-                    loss = criterion(outputs, labels)
+                    outputs = server_model(inputs)
+                    loss = criterion(outputs, targets)
                     loss.backward()
                     optimizer.step()
         

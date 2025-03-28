@@ -239,7 +239,7 @@ def KeTS(
             sim = F.cosine_similarity(flat_update1, flat_update2, dim=0).item()
             # Compute Euclidean distance
             dist = torch.norm(flat_update1 - flat_update2).item()
-            logger.info(f"client {cid}, cosine similarity: {sim}, Euclidean distance: {dist}")
+            #logger.info(f"client {cid}, cosine similarity: {sim}, Euclidean distance: {dist}")
             if sim >= 0:
                 alpha = (1 - sim) + dist
                 trust_scores[cid] = max(0, trust_scores[cid] - baseline_decreased_score * alpha )
@@ -900,6 +900,32 @@ def KeTSV2(
     '''
     #MEDIAN round 1
     if all(update is None for update in last_updates.values()):
+        #-- Still checking colluding in the first round
+        colluding_scores = {}
+        n = len(gradients)
+        for i in range(n):
+            cid_i, grad_i = gradients[i]
+            score = 0
+            flat_i = grad_i['flattened_diffs'].view(-1)
+            for j in range(n):
+                if i == j:
+                    continue
+                _, grad_j = gradients[j]
+                flat_j = grad_j['flattened_diffs'].view(-1)
+                sim = F.cosine_similarity(flat_i, flat_j, dim=0).item()
+                if sim > 0.99:
+                    score += 1
+            colluding_scores[cid_i] = score
+        logger.info(f"Colluding scores: {colluding_scores}")
+        
+        # --- Remove colluding clients from aggregation ---
+        non_colluding_gradients = [(cid, grad) for cid, grad in gradients if colluding_scores[cid] == 0]
+        if not non_colluding_gradients:
+            logger.warning("All clients detected as colluding. Falling back to aggregating all gradients.")
+            non_colluding_gradients = gradients
+        gradients = non_colluding_gradients
+        
+        
         grads = [gradient[1]['flattened_diffs'] for gradient in gradients]
         # Stack gradients into a tensor of shape (n_clients, n_params)
         stacked = torch.stack(grads, dim=0)
@@ -946,7 +972,7 @@ def KeTSV2(
             _, grad_j = gradients[j]
             flat_j = grad_j['flattened_diffs'].view(-1)
             sim = F.cosine_similarity(flat_i, flat_j, dim=0).item()
-            if sim > 0.92:
+            if sim > 0.99:
                 score += 1
         colluding_scores[cid_i] = score
     logger.info(f"Colluding scores: {colluding_scores}")

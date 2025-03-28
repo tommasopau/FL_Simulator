@@ -49,8 +49,7 @@ class Client:
         
 
         # Create a new model and load global state
-        client_model = copy.deepcopy(global_model).to(device)
-        client_model.load_state_dict(global_model.state_dict())
+        client_model = global_model.to(device)
         
         
         client_model.train()
@@ -73,34 +72,45 @@ class Client:
             )
 
         # Clone initial parameters for computing updates
-        initial_params = {key: param.clone() for key, param in client_model.named_parameters()}
+        initial_params = {key: param.clone().detach() for key, param in client_model.named_parameters()}
         
         for epoch in range(local_epochs):
             self.logger.info(f"Client {self.client_id} - Local Epoch {epoch + 1}/{local_epochs}")
             for batch_idx, batch in enumerate(self.client_loader):
-                images = batch['image'].to(device)
-                labels = batch['label'].to(device)
-
+                # Check if the batch is a dict (images) or a tuple/list (tabular data)
+                if isinstance(batch, dict):
+                    inputs = batch['image'].to(device)
+                    targets = batch['label'].to(device)
+                elif isinstance(batch, (tuple, list)) and len(batch) == 2:
+                    inputs, targets = batch
+                    inputs = inputs.to(device)
+                    if targets.ndim == 2 and targets.size(1) == 1:
+                        targets = targets.squeeze(1)
+                    targets = targets.to(device)
+                else:
+                    raise ValueError("Unexpected batch format. Expected dict with keys ('image','label') or tuple (features, labels).")
+                    
                 optimizer.zero_grad(set_to_none=True)
 
                 if use_amp:
                     with torch.amp.autocast('cuda'):
-                        outputs = client_model(images)
-                        loss = criterion(outputs, labels)
+                        outputs = client_model(inputs)
+                        loss = criterion(outputs, targets)
                     scaler.scale(loss).backward()
                     scaler.step(optimizer)
                     scaler.update()
                 else:
-                    outputs = client_model(images)
-                    loss = criterion(outputs, labels)
+                    outputs = client_model(inputs)
+                    loss = criterion(outputs, targets)
                     loss.backward()
                     optimizer.step()
         
-        final_params = {key: param.clone() for key, param in client_model.named_parameters()}
+        final_params = {key: param.clone().detach() for key, param in client_model.named_parameters()}
         param_differences = {
             key: (final_params[key] - initial_params[key]) for key in final_params.keys()
         }
-
+        del initial_params, final_params
+        torch.cuda.empty_cache()
         gradient_like_diffs = torch.cat([diff.view(-1) for diff in param_differences.values()]).unsqueeze(1)
 
         

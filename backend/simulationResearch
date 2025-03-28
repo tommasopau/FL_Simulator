@@ -4,9 +4,10 @@ from utils.seeding import set_deterministic_mode
 from utils.logger import setup_logger
 setup_logger() 
 from pydantic import ValidationError
-from utils.models import MNISTCNN, FCMNIST , ZalandoCNN , FNet
+from utils.models import MNISTCNN, FCMNIST , ZalandoCNN , FNet , AdultCensusIncomeClassifier , CovertypeClassifier, KDDSimpleNN
+
 from utils.constants import ALLOWED_FILTERS
-from dataset import FederatedDataLoader, DatasetHandler , server_dataset
+from dataset.dataset import FederatedDataLoader, DatasetHandler, DatasetHandlerTab, server_dataset
 from server import Server, AggregationStrategy, AttackServer, AttackType , FLTrust
 import multiprocessing
 import ray
@@ -47,7 +48,10 @@ def main():
                 'MNISTCNN': MNISTCNN,
                 'FCMNIST': FCMNIST,
                 'ZalandoCNN' : ZalandoCNN ,
-                'FNet' : FNet
+                'FNet' : FNet, 
+                'ADULT' : AdultCensusIncomeClassifier,
+                'COVERTYPE' : CovertypeClassifier,
+                'KDD' : KDDSimpleNN
         }
         model_type = model_cfg.get('type', 'FCMNIST')
         model_class = model_mapping.get(model_type)
@@ -58,13 +62,19 @@ def main():
         global_model = model_class().to(device)
         logger.info(f"Initialized global model: {model_type}")
             
-        # Initialize DatasetHandler
-        federated_dataset_handler = DatasetHandler(
-        datasetID=federated_cfg['dataset'],
-        num_clients=federated_cfg['num_clients'],
-        partition_type=federated_cfg['partition_type'],
-        alpha=federated_cfg['alpha'],
-        seed=federated_cfg.get('seed', 42),
+        # Determine the appropriate DatasetHandler based on the dataset type
+        dataset_id = federated_cfg['dataset'].lower()
+        if dataset_id not in ['mnist', 'fashionmnist','uoft-cs/cifar10']:
+            dataset_handler_class = DatasetHandlerTab
+        else:
+            dataset_handler_class = DatasetHandler
+
+        federated_dataset_handler = dataset_handler_class(
+            datasetID=federated_cfg['dataset'],
+            num_clients=federated_cfg['num_clients'],
+            partition_type=federated_cfg['partition_type'],
+            alpha=federated_cfg['alpha'],
+            seed=federated_cfg.get('seed', 42),
         )
         if federated_cfg['attack'].upper() == 'LABEL_FLIP':
             federated_dataset_handler.label_flipping_attack = True

@@ -58,7 +58,7 @@ if page == "Set Parameters":
             }
         }
 
-        response = requests.post("http://localhost:8000/api/config", json=config)
+        response = requests.post("http://localhost:8000/configuration", json=config)
         if response.status_code == 200:
             st.success("Configuration submitted successfully.")
         else:
@@ -70,7 +70,7 @@ elif page == "Run Simulation":
     if st.button("Start Simulation"):
         st.success("Training started", icon="🚀")
         try:
-            sim_response = requests.get("http://localhost:8000/start")
+            sim_response = requests.get("http://localhost:8000/simulation")
             if sim_response.status_code == 200:
                 st.balloons()
 
@@ -166,7 +166,7 @@ elif page == "Execute Query":
             
             try:
                 # Send the query to the API
-                response = requests.post('http://localhost:8000/api/query', json=payload)
+                response = requests.post('http://localhost:8000/query', json=payload)
                 if response.status_code == 200:
                     result = response.json().get('result', [])
                     if result:

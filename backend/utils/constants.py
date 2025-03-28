@@ -29,3 +29,9 @@ NORMALIZATION_PARAMS = {
     "fashion_mnist": ((0.2860,), (0.3530,)),
     # Add additional dataset normalization parameters here.
 }
+
+TARGET_LABELS = {
+    'mstz/covertype': 'cover_type',
+    'scikit-learn/adult-census-income': 'income',
+    'mstz/kddcup': 'class',
+}

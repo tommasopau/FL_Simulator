@@ -6,7 +6,7 @@ from utils.models import MNISTCNN, FCMNIST, ZalandoCNN, FNet
 from utils.constants import ALLOWED_FILTERS
 from utils.config import load_config
 from utils.db import get_session,get_engine , SimulationResult
-from dataset import FederatedDataLoader, DatasetHandler, server_dataset
+from backend.dataset.dataset import FederatedDataLoader, DatasetHandler, server_dataset
 from server import FLTrust, AttackServer, AggregationStrategy, AttackType
 from utils.seeding import set_deterministic_mode
 

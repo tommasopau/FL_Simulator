@@ -1,17 +1,17 @@
 federated_learning:
-  aggregation_strategy: KeTSV2
-  alpha: 0.5
+  aggregation_strategy: FLTRUST
+  alpha: 0.6
   attack: MIN_MAX
-  batch_size: 64
-  dataset: mnist
-  global_epochs: 20
+  batch_size: 128
+  dataset: mstz/kddcup #scikit-learn/adult-census-income #mstz/covertype
+  global_epochs: 50
   learning_rate: 0.001
   local_DP_SGD: false
-  local_epochs: 5
-  num_attackers: 10
+  local_epochs: 2
+  num_attackers: 15
   num_clients: 50
   partition_type: non-iid
   sampled_clients: 50
   seed: 42
 model:
-  type: FCMNIST
+  type: KDD

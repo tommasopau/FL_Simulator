@@ -1,16 +1,21 @@
 import logging
-from utils.constants import NORMALIZATION_PARAMS
+from utils.constants import NORMALIZATION_PARAMS, TARGET_LABELS
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import random
 import torch
 import numpy as np
-from torch.utils.data import DataLoader
+from sklearn.compose import ColumnTransformer
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OrdinalEncoder, StandardScaler
+from torch.utils.data import DataLoader , TensorDataset
 from torchvision.transforms import Compose, Normalize, ToTensor
-from collections import Counter
 from flwr_datasets import FederatedDataset
 from flwr_datasets.partitioner import DirichletPartitioner, IidPartitioner
-from typing import List
+from datasets import load_dataset
+from .flwr_wrapper import CustomFederatedDataset
+
 
 class DatasetUtils:
     @staticmethod
@@ -20,7 +25,7 @@ class DatasetUtils:
         """
         mean, std = NORMALIZATION_PARAMS.get(dataset_type, ((0.5,), (0.5,)))
         pytorch_transforms = Compose([ToTensor(), Normalize(mean , std)]) #Mnist Value -> add fashion_mnist (0.1307,), (0.3081,
-        batch["image"] = [pytorch_transforms(img) for img in batch["image"]]
+        batch['image'] = [pytorch_transforms(img) for img in batch['image']]
         return batch
     
     
@@ -45,6 +50,7 @@ class DatasetHandler:
         """
         Initialize the partitioner based on the partition type.
         """
+        
         if self.partition_type == 'iid':
             partitioner = IidPartitioner(num_partitions=self.num_clients)
         else:
@@ -136,6 +142,132 @@ class DatasetHandler:
         self.logger.info("Structured attack complete on selected client datasets.")
 
 
+
+
+#-----Tabular Data Handling-----
+
+class DatasetHandlerTab(DatasetHandler):
+    """
+    DatasetHandlerTab extends DatasetHandler to handle tabular datasets.
+    It overrides methods that require adjustments for tabular data processing.
+    """
+    @staticmethod
+    def transform_client_dataset(dataset: pd.DataFrame) -> pd.DataFrame:
+        """
+        Apply transformations to the client's dataset.
+        """
+        dataset.dropna(inplace=True)
+        
+        
+            
+        
+        categorical_columns = dataset.select_dtypes(include=['object','bool']).columns.tolist()
+        if categorical_columns:
+            ordinal_encoder =  OrdinalEncoder()
+            dataset[categorical_columns] = ordinal_encoder.fit_transform(dataset[categorical_columns])
+        
+        
+        label = dataset.columns[-1]
+        
+        X = dataset.drop(columns=[label],axis=1)
+        
+        y = dataset[label]
+        
+        #no local test set 
+        X_train, y_train = X, y
+        
+        numeric_features = X_train.select_dtypes(include=['float64','float32' , 'int64']).columns.tolist()
+        
+        numeric_transformer = Pipeline(steps=[('scaler', StandardScaler())])
+        
+        preprocess = ColumnTransformer(transformers=[('num', numeric_transformer, numeric_features)])
+        
+        X_train = preprocess.fit_transform(X_train)
+       
+        
+        X_train_tensor = torch.tensor(X_train, dtype=torch.float32)
+        
+        y_train_tensor = torch.tensor(y_train.values, dtype=torch.long).view(-1, 1)
+        
+        train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
+        
+        return train_dataset
+        
+    def _initialize_partitioner(self):
+        """
+        Initialize the partitioner based on the partition type.
+        """
+        label = TARGET_LABELS.get(self.datasetID, 'label')
+        if self.partition_type == 'iid':
+            partitioner = IidPartitioner(num_partitions=self.num_clients)
+        else:
+            partitioner = DirichletPartitioner(num_partitions=self.num_clients, partition_by=label, 
+                                              alpha=self.alpha, min_partition_size=10, 
+                                              self_balancing=True, seed=self.seed)
+        return partitioner
+
+    def load_federated_dataset(self):
+        """
+        Load the FederatedDataset and partition it according to the specified partition type.
+        """
+        self.logger.info("Loading federated dataset.")
+        partitioner = self._initialize_partitioner()
+        if self.datasetID == 'mstz/covertype':
+            self.fds = FederatedDataset(dataset=self.datasetID, subset='covertype', partitioners={"train": partitioner})
+        elif self.datasetID == 'mstz/kddcup':
+            # Load the dataset from Hugging Face and downsample it to 500k rows
+            dataset = load_dataset(self.datasetID, split='train')
+            dataset = dataset.shuffle(seed=self.seed).select(range(400000))
+            logging.info(f"Loaded {len(dataset)} rows from the dataset.")
+            self.fds = CustomFederatedDataset(dataset={'train': dataset}, partitioners={"train": partitioner})
+        
+        else:
+            self.fds = FederatedDataset(dataset=self.datasetID, partitioners={"train": partitioner})
+        self.client_datasets = [self.fds.load_partition(user_id).with_format('pandas')[:] for user_id in range(self.num_clients)]
+        self.logger.info("Federated dataset loaded and partitioned.")
+        
+        
+        
+        if self.label_flipping_attack:
+            attackers = [cid for cid in range(self.num_attackers)] #manual setting attackers to be updated
+            # TODO: Implement label flipping attack for security testing.
+            pass
+        
+        self._transform_clients_datasets()
+        
+    
+    def _transform_clients_datasets(self):
+        """
+        Apply transformations to each client's dataset.
+        """
+        self.logger.info("Applying transformations to client datasets.")
+        self.client_datasets = [self.transform_client_dataset(client_dataset) 
+                                for client_dataset in self.client_datasets]
+        self.logger.info("Transformations applied to all client datasets.")
+        
+    def load_test_data(self):
+        """
+        Load and transform the test dataset for tabular data by aggregating all training partitions and splitting.
+        """
+        self.logger.info("Loading test dataset for tabular data by aggregating all partitions and splitting.")
+        # Aggregate the full dataset from all client partitions.
+        
+        full_dataset = pd.concat(
+            [self.fds.load_partition(user_id).with_format('pandas')[:] for user_id in range(self.num_clients)],
+            ignore_index=True
+        )
+        train_data, test_data = train_test_split(full_dataset, test_size=0.2, random_state=self.seed)
+        
+        # Process the test split
+        test_tensor_dataset = DatasetHandlerTab.transform_client_dataset(test_data)
+        
+        self.logger.info("Test dataset loaded and transformed for tabular data.")
+        return test_tensor_dataset
+
+
+
+
+
 class FederatedDataLoader:
     def __init__(self, dataset_handler: DatasetHandler, batch_size: int , device: str):
         self.dataset_handler = dataset_handler
@@ -161,17 +293,36 @@ class FederatedDataLoader:
             pin_memory=True if self.device == 'cuda' else False
         )
 
+
+#----SERVER FLTRUST 
+
 def server_dataset(datasetID: str, batch_size: int, device: str) -> DataLoader:
         """
         Load the server dataset for FLTRUST
         """
-        fds = FederatedDataset(dataset=datasetID, partitioners={"train": IidPartitioner(num_partitions=600)})
-        transform = lambda batch: DatasetUtils.apply_transforms(batch, dataset_type=datasetID)
-        server_dataset = fds.load_partition(0).with_transform(transform)
-        return DataLoader(
-            server_dataset,
-            batch_size=batch_size,
-            shuffle=True,
-            num_workers=0,
-            pin_memory=True if device == 'cuda' else False
-        )
+        if datasetID not in ['mnist', 'cifar10', 'fashion_mnist']:
+            fds = FederatedDataset(dataset=datasetID, partitioners={"train": IidPartitioner(num_partitions=600)})
+            df = fds.load_partition(0).with_format('pandas')[:]
+            # Use the static method from DatasetHandlerTab
+            transformed_dataset = DatasetHandlerTab.transform_client_dataset(df)
+            
+            return DataLoader(
+                transformed_dataset,
+                batch_size=batch_size,
+                shuffle=True,
+                num_workers=0,
+                pin_memory=True if device == 'cuda' else False
+            )
+            
+            
+        else:
+            fds = FederatedDataset(dataset=datasetID, partitioners={"train": IidPartitioner(num_partitions=600)})
+            transform = lambda batch: DatasetUtils.apply_transforms(batch, dataset_type=datasetID)
+            server_dataset = fds.load_partition(0).with_transform(transform)
+            return DataLoader(
+                server_dataset,
+                batch_size=batch_size,
+                shuffle=True,
+                num_workers=0,
+                pin_memory=True if device == 'cuda' else False
+            )

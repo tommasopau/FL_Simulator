@@ -6,7 +6,7 @@ setup_logger()
 from pydantic import ValidationError
 from utils.models import MNISTCNN, FCMNIST , ZalandoCNN , FNet
 from utils.constants import ALLOWED_FILTERS
-from dataset import FederatedDataLoader, DatasetHandler , server_dataset
+from backend.dataset.dataset import FederatedDataLoader, DatasetHandler , server_dataset
 from server import Server, AggregationStrategy, AttackServer, AttackType , FLTrust
 import multiprocessing
 import ray

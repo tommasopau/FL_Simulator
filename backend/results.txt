@@ -90,4 +90,993 @@ Configuration:
         "local_DP_SGD": false,
         "aggregation_strategy": "KeTSV2"
     }
+}Simulation Result
+Accuracy: 0.7540304007369876
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 50,
+        "alpha": 0.5,
+        "attack": "SIGN_FLIP",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 10,
+        "partition_type": "non-iid",
+        "sampled_clients": 50,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "KeTS"
+    }
+}Simulation Result
+Accuracy: 0.7524950099800399
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 50,
+        "alpha": 0.4,
+        "attack": "MIN_MAX",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 10,
+        "partition_type": "non-iid",
+        "sampled_clients": 50,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "KeTS"
+    }
+}Simulation Result
+Accuracy: 0.7173345616459389
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 50,
+        "alpha": 0.6,
+        "attack": "MIN_MAX",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 10,
+        "partition_type": "non-iid",
+        "sampled_clients": 50,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "KeTS"
+    }
+}Simulation Result
+Accuracy: 0.7521879318286504
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 50,
+        "alpha": 0.4,
+        "attack": "MIN_MAX",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 3,
+        "num_attackers": 10,
+        "partition_type": "non-iid",
+        "sampled_clients": 50,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "FEDAVG"
+    }
+}Simulation Result
+Accuracy: 0.7524950099800399
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 50,
+        "alpha": 0.4,
+        "attack": "NO_ATTACK",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 10,
+        "partition_type": "non-iid",
+        "sampled_clients": 50,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "FEDAVG"
+    }
+}Simulation Result
+Accuracy: 0.7524950099800399
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 50,
+        "alpha": 0.4,
+        "attack": "SIGN_FLIP",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 10,
+        "partition_type": "non-iid",
+        "sampled_clients": 50,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "FEDAVG"
+    }
+}Simulation Result
+Accuracy: 0.7612467372946415
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 100,
+        "alpha": 1.0,
+        "attack": "SIGN_FLIP",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 10,
+        "partition_type": "non-iid",
+        "sampled_clients": 100,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "FEDAVG"
+    }
+}Simulation Result
+Accuracy: 0.7614002763703362
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 100,
+        "alpha": 1.0,
+        "attack": "NO_ATTACK",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 10,
+        "partition_type": "non-iid",
+        "sampled_clients": 100,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "FEDAVG"
+    }
+}Simulation Result
+Accuracy: 0.7549516351911562
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 40,
+        "alpha": 1.0,
+        "attack": "MIN_SUM",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 10,
+        "partition_type": "non-iid",
+        "sampled_clients": 40,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "KeTS"
+    }
+}Simulation Result
+Accuracy: 0.7540304007369876
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 80,
+        "alpha": 0.5,
+        "attack": "NO_ATTACK",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 10,
+        "partition_type": "non-iid",
+        "sampled_clients": 80,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "FEDAVG"
+    }
+}Simulation Result
+Accuracy: 0.7540304007369876
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 80,
+        "alpha": 0.5,
+        "attack": "SIGN_FLIP",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 10,
+        "partition_type": "non-iid",
+        "sampled_clients": 80,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "FEDAVG"
+    }
+}Simulation Result
+Accuracy: 0.6821741133118379
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 80,
+        "alpha": 0.5,
+        "attack": "SIGN_FLIP",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 10,
+        "partition_type": "non-iid",
+        "sampled_clients": 80,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "MEDIAN"
+    }
+}Simulation Result
+Accuracy: 0.6241363426992169
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 80,
+        "alpha": 0.5,
+        "attack": "SIGN_FLIP",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 10,
+        "partition_type": "non-iid",
+        "sampled_clients": 80,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "KRUM"
+    }
+}Simulation Result
+Accuracy: 0.7540304007369876
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 80,
+        "alpha": 0.5,
+        "attack": "SIGN_FLIP",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 10,
+        "partition_type": "non-iid",
+        "sampled_clients": 80,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "KeTS"
+    }
+}Simulation Result
+Accuracy: 0.30538922155688625
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 80,
+        "alpha": 0.5,
+        "attack": "SIGN_FLIP",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 10,
+        "partition_type": "non-iid",
+        "sampled_clients": 80,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "KeTSV2"
+    }
+}Simulation Result
+Accuracy: 0.7286964532473514
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.4,
+        "attack": "SIGN_FLIP",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "KeTSV2"
+    }
+}Simulation Result
+Accuracy: 0.6989098725625672
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.4,
+        "attack": "SIGN_FLIP",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "MEDIAN"
+    }
+}Simulation Result
+Accuracy: 0.6311991401811761
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.4,
+        "attack": "SIGN_FLIP",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "KRUM"
+    }
+}Simulation Result
+Accuracy: 0.7620144326731153
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.4,
+        "attack": "TRIM",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "KeTS"
+    }
+}Simulation Result
+Accuracy: 0.4997696913864578
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.4,
+        "attack": "TRIM",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "MEDIAN"
+    }
+}Simulation Result
+Accuracy: 0.2714570858283433
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.4,
+        "attack": "TRIM",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "TRIM_MEAN"
+    }
+}Simulation Result
+Accuracy: 0.7637033625057578
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.4,
+        "attack": "TRIM",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "KeTSV2"
+    }
+}Simulation Result
+Accuracy: 0.7440503608168278
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.4,
+        "attack": "TRIM",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "FLTRUST"
+    }
+}Simulation Result
+Accuracy: 0.7438968217411331
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.4,
+        "attack": "MIN_MAX",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "FLTRUST"
+    }
+}Simulation Result
+Accuracy: 0.7571011822508829
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.5,
+        "attack": "MIN_MAX",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "KeTS"
+    }
+}Simulation Result
+Accuracy: 0.7431291263626593
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.5,
+        "attack": "MIN_MAX",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "FLTRUST"
+    }
+}Simulation Result
+Accuracy: 0.5286350376170735
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.5,
+        "attack": "MIN_MAX",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "MEDIAN"
+    }
+}Simulation Result
+Accuracy: 0.7627821280515892
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.5,
+        "attack": "NO_ATTACK",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "FEDAVG"
+    }
+}Simulation Result
+Accuracy: 0.5843050523652573
+Configuration:
+{
+    "model": {
+        "type": "COVERTYPE"
+    },
+    "federated_learning": {
+        "dataset": "mstz/covertype",
+        "num_clients": 60,
+        "alpha": 1.2,
+        "attack": "NO_ATTACK",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "FEDAVG"
+    }
+}Simulation Result
+Accuracy: 0.7627821280515892
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.5,
+        "attack": "NO_ATTACK",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "FEDAVG"
+    }
+}Simulation Result
+Accuracy: 0.7627821280515892
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.5,
+        "attack": "NO_ATTACK",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "FEDAVG"
+    }
+}Simulation Result
+Accuracy: 0.7632427452786734
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.5,
+        "attack": "NO_ATTACK",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "MEDIAN"
+    }
+}Simulation Result
+Accuracy: 0.7629356671272839
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.5,
+        "attack": "SIGN_FLIP",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "MEDIAN"
+    }
+}Simulation Result
+Accuracy: 0.7627821280515892
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.5,
+        "attack": "SIGN_FLIP",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "KeTSV2"
+    }
+}Simulation Result
+Accuracy: 0.760939659143252
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.5,
+        "attack": "SIGN_FLIP",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "KRUM"
+    }
+}Simulation Result
+Accuracy: 0.7434362045140488
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.5,
+        "attack": "SIGN_FLIP",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "FLTRUST"
+    }
+}Simulation Result
+Accuracy: 0.7429755872869646
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.5,
+        "attack": "MIN_MAX",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 5,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "FLTRUST"
+    }
+}Simulation Result
+Accuracy: 0.48502994011976047
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.5,
+        "attack": "MIN_MAX",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 4,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "MEDIAN"
+    }
+}Simulation Result
+Accuracy: 0.32596345769998464
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.5,
+        "attack": "MIN_MAX",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 4,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "TRIM_MEAN"
+    }
+}Simulation Result
+Accuracy: 0.7638569015814525
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.5,
+        "attack": "MIN_MAX",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 4,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "KeTSV2"
+    }
+}Simulation Result
+Accuracy: 0.6766467065868264
+Configuration:
+{
+    "model": {
+        "type": "ADULT"
+    },
+    "federated_learning": {
+        "dataset": "scikit-learn/adult-census-income",
+        "num_clients": 60,
+        "alpha": 0.5,
+        "attack": "MIN_MAX",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 4,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "FLTRUST"
+    }
+}Simulation Result
+Accuracy: 0.57325
+Configuration:
+{
+    "model": {
+        "type": "KDD"
+    },
+    "federated_learning": {
+        "dataset": "mstz/kddcup",
+        "num_clients": 60,
+        "alpha": 0.5,
+        "attack": "NO_ATTACK",
+        "batch_size": 64,
+        "global_epochs": 20,
+        "learning_rate": 0.001,
+        "local_epochs": 4,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 60,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "FEDAVG"
+    }
+}Simulation Result
+Accuracy: 0.8053625
+Configuration:
+{
+    "model": {
+        "type": "KDD"
+    },
+    "federated_learning": {
+        "dataset": "mstz/kddcup",
+        "num_clients": 100,
+        "alpha": 0.5,
+        "attack": "NO_ATTACK",
+        "batch_size": 128,
+        "global_epochs": 50,
+        "learning_rate": 0.001,
+        "local_epochs": 2,
+        "num_attackers": 15,
+        "partition_type": "non-iid",
+        "sampled_clients": 100,
+        "seed": 42,
+        "local_DP_SGD": false,
+        "aggregation_strategy": "FEDAVG"
+    }
 }
