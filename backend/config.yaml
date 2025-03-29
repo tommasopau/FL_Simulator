@@ -1,14 +1,14 @@
 federated_learning:
-  aggregation_strategy: FLTRUST
+  aggregation_strategy: KeTS_MedTrim
   alpha: 0.6
-  attack: MIN_MAX
-  batch_size: 128
-  dataset: mstz/kddcup #scikit-learn/adult-census-income #mstz/covertype
+  attack: SIGN_FLIP
+  batch_size: 64
+  dataset: mnist #mstz/kddcup #scikit-learn/adult-census-income #mstz/covertype
   global_epochs: 50
   learning_rate: 0.001
   local_DP_SGD: false
-  local_epochs: 2
-  num_attackers: 15
+  local_epochs: 4
+  num_attackers: 10
   num_clients: 50
   partition_type: non-iid
   sampled_clients: 50

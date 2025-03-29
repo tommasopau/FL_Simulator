@@ -15,7 +15,8 @@ from aggregation_techniques.aggregation import (
     DCT,
     DCT_K,
     DCT_raw,
-    KeTSV2
+    KeTSV2,
+    KeTS_MedTrim
     
 )
 from enum import Enum, auto
@@ -42,6 +43,7 @@ class AggregationStrategy(Enum):
     DCT_K = auto()
     DCT_raw = auto()
     KeTSV2 = auto()
+    KeTS_MedTrim = auto()
 #Enumeration that is later mapped to each aggregation method. The auto() function is used to automatically assign unique values to each member.
 
 aggregation_methods = {
@@ -54,7 +56,8 @@ aggregation_methods = {
     AggregationStrategy.FLTRUST: None,
     AggregationStrategy.DCT_K: DCT_K,
     AggregationStrategy.DCT_raw: DCT_raw,
-    AggregationStrategy.KeTSV2: KeTSV2
+    AggregationStrategy.KeTSV2: KeTSV2,
+    AggregationStrategy.KeTS_MedTrim: KeTS_MedTrim
     
 }
 
@@ -232,8 +235,17 @@ class Server:
             self.logger.warning(
                 "Requested number of clients exceeds available clients. Sampling all clients."
             )
+            
+            
         # Filter out clients with weight 0
         filtered_weights = {client_id: weight for client_id, weight in weights.items() if weight > 0}
+        
+        available = len(filtered_weights)
+        if num_of_sampled > available:
+            self.logger.warning(
+                f"Requested number of clients ({num_of_sampled}) exceeds available clients with non-zero weight ({available}). Sampling all available clients."
+            )
+            num_of_sampled = available
         total_weight = sum(filtered_weights.values())
         normalized_weights = {client_id: weight / total_weight for client_id, weight in filtered_weights.items()}
         

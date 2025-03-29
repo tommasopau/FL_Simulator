@@ -64,7 +64,7 @@ def main():
             
         # Determine the appropriate DatasetHandler based on the dataset type
         dataset_id = federated_cfg['dataset'].lower()
-        if dataset_id not in ['mnist', 'fashionmnist','uoft-cs/cifar10']:
+        if dataset_id not in ['mnist', 'fashion_mnist','uoft-cs/cifar10']:
             dataset_handler_class = DatasetHandlerTab
         else:
             dataset_handler_class = DatasetHandler
