@@ -59,9 +59,13 @@ FL Simulator is a federated learning simulation platform designed for both acade
   - *app/* – Flask application with routes for simulation, configuration, and query execution.
   - *server.py* – Contains the core logic for managing the training process, implementing attacks, and handling defense mechanisms.
   - *client.py* - Houses the primary functionality for executing client-side training.
-  - *dataset folder* - Manages dataset loading. It selects the partitioner and loads both client-specific datasets and a centralized test set. It currently supports:   
-  – Tabular datasets: kdd-cup-1999, adult-census-income, covtype.   
-  – Image datasets: MNIST, Fashion_MNIST, cifar10.
+  - *attacks.py* – Implements various adversarial attack schemes.
+  - *dataset/* - Manages dataset loading. It selects the partitioner and loads both client-specific datasets and a centralized test set.
+  - *aggregation_techniques/* - Implements various aggregation strategies.
+  - *utils/* – Contains utility modules for configuration, logging, and database management.
+  - *datasets/* – Supports loading and partitioning of datasets for federated learning simulations. Currently supports:
+    - Tabular datasets: `kdd-cup-1999`, `adult-census-income`, `covtype`.
+    - Image datasets: `MNIST`, `Fashion_MNIST`, `CIFAR-10`.
 - **streamlit_app.py** – The Streamlit-based frontend for interactive simulation configuration and monitoring.
 - **docker-compose.yml** – Docker Compose configuration for orchestrating the services.
 - **Dockerfile-streamlit** – Dockerfile to build the Streamlit container.
