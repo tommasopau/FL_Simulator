@@ -25,22 +25,23 @@ FL Simulator is a federated learning simulation platform designed for both acade
   Easily extend the platform with custom attack methods, defense mechanisms, datasets, and models.
 
 - **Wide Range of Attacks:**  
-  Experiment with many adversarial attack schemes such as:
-  - *Label Flip Attacks*
-  - *Min-Max & Min-Sum Attacks* (including advanced variants like MIN_MAX_V2, MIN_SUM_V2)
-  - *Krum & Trim Attacks*
-  - *Gaussian Noise Attacks*
-  - *Sign Flip Attacks*
+  A variety of adversarial attack schemes have been implemented, including:
+  - Label Flip Attacks (https://arxiv.org/abs/1206.6389)
+  - Min-Max & Min-Sum Attacks (https://www.ndss-symposium.org/ndss-paper/manipulating-the-byzantine-optimizing-model-poisoning-attacks-and-defenses-for-federated-learning/)
+  - Krum & Trim Attacks (https://www.usenix.org/conference/usenixsecurity20/presentation/fang)
+  - Gaussian Noise Attacks
+  - Sign Flip Attacks (https://ieeexplore.ieee.org/document/10725463)
+  - No_Attack : used to run a clean training process.
 
 - **Aggregation Strategies:**  
-  Supports multiple aggregation strategies to counteract adversarial attacks:
-  - FEDAVG
-  - KRUM
-  - MEDIAN
-  - TRIM_MEAN
-  - KeTS (and its variants)
-  - FLTRUST
-  - And custom, DWT-based methods
+  A variety of aggregation strategies have been implemented to mitigate adversarial attacks, including:
+  - FEDAVG (https://proceedings.mlr.press/v54/mcmahan17a.html)
+  - KRUM (https://papers.nips.cc/paper_files/paper/2017/hash/f4b9ec30ad9f68f89b29639786cb62ef-Abstract.html)
+  - MEDIAN (https://proceedings.mlr.press/v80/yin18a.html)
+  - TRIM_MEAN (https://proceedings.mlr.press/v80/yin18a.html)
+  - KeTS (https://arxiv.org/abs/2501.06729)
+  - FLTRUST (https://arxiv.org/abs/2012.13995)
+  - Custom variants for research purposes
 
 - **Built-in Differential Privacy:**  
   Integrates [Opacus](https://opacus.ai/) to enable differentially private training, ensuring privacy-preserving simulations.
@@ -56,8 +57,9 @@ FL Simulator is a federated learning simulation platform designed for both acade
 - **backend/** – Contains the Python backend code that implements the simulation logic, configuration handling, database integration, and API endpoints.
   - *utils/* – Utility modules for configuration, logging, and database management.
   - *app/* – Flask application with routes for simulation, configuration, and query execution.
-  - *server.py* – Core logic for training process , attacks and defense management.
-  -*client.py* - Core logic for client training 
+  - *server.py* – Contains the core logic for managing the training process, implementing attacks, and handling defense mechanisms.
+  - *client.py* - Houses the primary functionality for executing client-side training.
+  - *dataset* - CManages dataset loading. It selects the partitioner and loads both client-specific datasets and a centralized test set. It currently supports:   – Tabular datasets: kdd-cup-1999, adult-census-income, covtype.   – Image datasets: MNIST, Fashion_MNIST, cifar10.
 - **streamlit_app.py** – The Streamlit-based frontend for interactive simulation configuration and monitoring.
 - **docker-compose.yml** – Docker Compose configuration for orchestrating the services.
 - **Dockerfile-streamlit** – Dockerfile to build the Streamlit container.
@@ -147,19 +149,6 @@ Example configuration parameters include:
 - **Federated Settings:** Number of clients, sampled clients, global/local epochs, learning rate, batch size, etc.
 - **Security Settings:** Type of attack (SIGN_FLIP, MIN_MAX, LABEL_FLIP, etc.), number of attackers, aggregation strategy (FEDAVG, KRUM, MEDIAN, etc.)
 - **Differential Privacy:** Enable or disable local DP-SGD through the configuration.
-
-## Attack & Defense Schemes
-
-The system supports a comprehensive suite of adversarial attack techniques along with robust defense mechanisms to mitigate them. The backend routes and servers have specialized logic to implement:
-
-- **Attack Schemes:**  
-  Utilize methods like label flipping, sign flipping, min-max, and more. Advanced variants (e.g., MIN_MAX_V2) are also implemented within the training logic.
-
-- **Defense Strategies:**  
-  After simulating adversarial behaviors, the server aggregates client updates using strategies like:
-  - Standard averaging (FEDAVG)
-  - Robust aggregation (KRUM, MEDIAN, TRIM_MEAN)
-  - Custom methods like KeTS and FLTRUST, which include additional trust/similarity scoring mechanisms.
 
 ## Logging & Querying
 
