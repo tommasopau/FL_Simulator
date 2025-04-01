@@ -424,7 +424,7 @@ class AttackServer(Server):
         self.logger.info("Federated training with attacks completed.")
         return accuracy
 
-class FLTrust(AttackServer):
+class FLTrustServer(AttackServer):
     """
     FLTrust server variant that trains on a local trusted dataset using the same
     hyperparameters as clients. The server update is used as a reference to re-weight

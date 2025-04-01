@@ -6,7 +6,7 @@ setup_logger()
 from pydantic import ValidationError
 from utils.models import MNISTCNN, FCMNIST , ZalandoCNN , FNet , AdultCensusIncomeClassifier , CovertypeClassifier, KDDSimpleNN
 
-from utils.constants import ALLOWED_FILTERS
+from utils.constants import ALLOWED_FILTERS , MODEL_MAPPING
 from dataset.dataset import FederatedDataLoader, DatasetHandler, DatasetHandlerTab, server_dataset
 from server import Server, AggregationStrategy, AttackServer, AttackType , FLTrust
 import multiprocessing
@@ -28,33 +28,25 @@ def main():
             
         logger = logging.getLogger(__name__)
         logger.info("Main process started.")
-            
+        
+        set_deterministic_mode(federated_cfg.get('seed', 42))    
+        
         config = load_config('config.yaml')
-        config = config.model_dump()
-
+        config = serialize_config(config)
         validate_config(config)
             
         federated_cfg = config['federated_learning']
         model_cfg = config['model']
             
-        set_deterministic_mode(federated_cfg.get('seed', 42))
+        
             
         # Verify device availability
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         logger.info(f"Using device: {device}")
             
-        # Model selection based on config
-        model_mapping = {
-                'MNISTCNN': MNISTCNN,
-                'FCMNIST': FCMNIST,
-                'ZalandoCNN' : ZalandoCNN ,
-                'FNet' : FNet, 
-                'ADULT' : AdultCensusIncomeClassifier,
-                'COVERTYPE' : CovertypeClassifier,
-                'KDD' : KDDSimpleNN
-        }
+        
         model_type = model_cfg.get('type', 'FCMNIST')
-        model_class = model_mapping.get(model_type)
+        model_class = MODEL_MAPPING.get(model_type , None)
         if model_class is None:
             logger.error(f"Unsupported model type: {model_type}")
             raise ValueError(f"Unsupported model type: {model_type}")

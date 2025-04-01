@@ -35,3 +35,13 @@ TARGET_LABELS = {
     'scikit-learn/adult-census-income': 'income',
     'mstz/kddcup': 'class',
 }
+from .models import MNISTCNN, FCMNIST , ZalandoCNN , FNet , AdultCensusIncomeClassifier , CovertypeClassifier, KDDSimpleNN
+MODEL_MAPPING = {
+                'MNISTCNN': MNISTCNN,
+                'FCMNIST': FCMNIST,
+                'ZalandoCNN' : ZalandoCNN ,
+                'FNet' : FNet, 
+                'ADULT' : AdultCensusIncomeClassifier,
+                'COVERTYPE' : CovertypeClassifier,
+                'KDD' : KDDSimpleNN
+        }
