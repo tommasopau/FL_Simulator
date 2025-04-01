@@ -95,7 +95,7 @@ def main():
         attack_type = AttackType[attack_str.upper()]
         
         if federated_cfg['aggregation_strategy'].upper() == 'FLTRUST':
-            server_data_loader = server_dataset(federated_cfg['dataset'], federated_cfg['batch_size'], device)
+            server_data_loader = federated_dataset_handler.server_dataset(batch_size=federated_cfg['batch_size'])
             # Instantiate FLTrust server.
             server = FLTrust(
                 server_data_loader=server_data_loader,
@@ -141,6 +141,17 @@ def main():
                 result_file.write("Configuration:\n")
                 result_file.write(json.dumps(config, indent=4))
             logger.info(f"Results saved to {result_filepath}")
+            
+            # New: write epoch results along with the config into another file (append mode)
+            epoch_filepath = "simulation_epoch_results.txt"
+            with open(epoch_filepath, "a") as epoch_file:
+                epoch_file.write("Simulation Epoch Results\n")
+                epoch_file.write("Configuration:\n")
+                epoch_file.write(json.dumps(config, indent=4))
+                epoch_file.write("\nEpoch Results:\n")
+                epoch_file.write(json.dumps(server.epoch_results))
+                epoch_file.write("\n\n")
+            logger.info(f"Epoch results appended to {epoch_filepath}")
         except Exception as write_exc:
             logger.error(f"Failed to write simulation results to file: {write_exc}")
     except Exception as e:

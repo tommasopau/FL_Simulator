@@ -185,6 +185,7 @@ def trim_mean(
         device (torch.device): Computation device.
         **kwargs: Additional keyword arguments.
     """
+    
     gradients = [gradient[1]['flattened_diffs'] for gradient in gradients]
     n = len(gradients)
     logger.info(f"Aggregating gradients using Trim Mean with {f} malicious clients.")

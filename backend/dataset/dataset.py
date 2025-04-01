@@ -1,4 +1,5 @@
 import logging
+from abc import ABC, abstractmethod
 from utils.constants import NORMALIZATION_PARAMS, TARGET_LABELS
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -16,8 +17,36 @@ from flwr_datasets.partitioner import DirichletPartitioner, IidPartitioner
 from datasets import load_dataset
 from .flwr_wrapper import CustomFederatedDataset
 
+class AbstractDatasetHandler(ABC):
+    def __init__(self, datasetID: str, num_clients: int, partition_type: str, alpha: float, seed: int = 33):
+        self.datasetID = datasetID
+        self.num_clients = num_clients
+        self.partition_type = partition_type
+        self.alpha = alpha
+        self.seed = seed
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.fds = None
+        self.client_datasets = None
+        self.label_flipping_attack = False
+        self.num_attackers = 0
+        self.logger = logging.getLogger(__name__)
+        self.logger.info("DatasetHandler initialized.")
 
-class DatasetUtils:
+    @abstractmethod
+    def load_federated_dataset(self):
+        pass
+
+    @abstractmethod
+    def load_test_data(self):
+        pass
+    
+    
+
+
+class DatasetHandler(AbstractDatasetHandler):
+    def __init__(self, datasetID: str, num_clients: int, partition_type: str, alpha: float, seed: int = 33):
+        super().__init__(datasetID, num_clients, partition_type, alpha, seed)
+    
     @staticmethod
     def apply_transforms(batch , dataset_type: str) -> dict:
         """
@@ -30,21 +59,6 @@ class DatasetUtils:
     
     
 
-
-class DatasetHandler:
-    def __init__(self, datasetID: str, num_clients: int, partition_type: str , alpha: float , seed: int = 33):
-        self.num_clients = num_clients
-        self.partition_type = partition_type
-        self.alpha = alpha
-        self.seed = seed
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        self.fds = None
-        self.client_datasets = None
-        self.datasetID = datasetID
-        self.label_flipping_attack = False
-        self.num_attackers = 0
-        self.logger = logging.getLogger(__name__)
-        self.logger.info("DatasetHandler initialized.")
 
     def _initialize_partitioner(self):
         """
@@ -81,7 +95,7 @@ class DatasetHandler:
         Apply transformations to each client's dataset.
         """
         self.logger.info("Applying transformations to client datasets.")
-        transform = lambda batch: DatasetUtils.apply_transforms(batch, dataset_type=self.datasetID)
+        transform = lambda batch: DatasetHandler.apply_transforms(batch, dataset_type=self.datasetID)
         self.client_datasets = [client_dataset.with_transform(transform) 
                                 for client_dataset in self.client_datasets]
         self.logger.info("Transformations applied to all client datasets.")
@@ -92,7 +106,7 @@ class DatasetHandler:
         """
         self.logger.info("Loading test dataset.")
         test_dataset = self.fds.load_split("test")
-        transform = lambda batch: DatasetUtils.apply_transforms(batch, dataset_type=self.datasetID)
+        transform = lambda batch: DatasetHandler.apply_transforms(batch, dataset_type=self.datasetID)
         transformed_test = test_dataset.with_transform(transform)
         self.logger.info("Test dataset loaded and transformed.")
         return transformed_test
@@ -140,13 +154,31 @@ class DatasetHandler:
             self.client_datasets[client_id] = client_dataset
 
         self.logger.info("Structured attack complete on selected client datasets.")
+        
+        
+        
+        
+        
+    def server_dataset(self, batch_size: int) -> DataLoader:
+        fds = FederatedDataset(dataset=self.datasetID, partitioners={"train": IidPartitioner(num_partitions=600)})
+        transform = lambda batch: DatasetHandler.apply_transforms(batch, dataset_type=self.datasetID)
+        server_dataset = fds.load_partition(0).with_transform(transform)
+        return DataLoader(
+            server_dataset,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=0,
+            pin_memory=True if self.device == 'cuda' else False
+        )
 
 
 
 
 #-----Tabular Data Handling-----
 
-class DatasetHandlerTab(DatasetHandler):
+class DatasetHandlerTab(AbstractDatasetHandler):
+    def __init__(self, datasetID: str, num_clients: int, partition_type: str, alpha: float, seed: int = 33):
+        super().__init__(datasetID, num_clients, partition_type, alpha, seed)
     """
     DatasetHandlerTab extends DatasetHandler to handle tabular datasets.
     It overrides methods that require adjustments for tabular data processing.
@@ -217,6 +249,7 @@ class DatasetHandlerTab(DatasetHandler):
         elif self.datasetID == 'mstz/kddcup':
             # Load the dataset from Hugging Face and downsample it to 500k rows
             dataset = load_dataset(self.datasetID, split='train')
+            dataset = pd.DataFrame(dataset).drop_duplicates()
             dataset = dataset.shuffle(seed=self.seed).select(range(400000))
             logging.info(f"Loaded {len(dataset)} rows from the dataset.")
             self.fds = CustomFederatedDataset(dataset={'train': dataset}, partitioners={"train": partitioner})
@@ -263,6 +296,24 @@ class DatasetHandlerTab(DatasetHandler):
         
         self.logger.info("Test dataset loaded and transformed for tabular data.")
         return test_tensor_dataset
+
+    def server_dataset(self, batch_size: int) -> DataLoader:
+        """
+        Load the server dataset for FLTRUST
+        """
+        
+        fds = FederatedDataset(dataset=self.datasetID, partitioners={"train": IidPartitioner(num_partitions=600)})
+        df = fds.load_partition(0).with_format('pandas')[:]
+        # Use the static method from DatasetHandlerTab
+        transformed_dataset = DatasetHandlerTab.transform_client_dataset(df)
+            
+        return DataLoader(
+            transformed_dataset,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=0,
+            pin_memory=True if self.device == 'cuda' else False
+        )
 
 
 

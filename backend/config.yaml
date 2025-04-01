@@ -1,17 +1,17 @@
 federated_learning:
-  aggregation_strategy: KeTS_MedTrim
-  alpha: 0.6
-  attack: SIGN_FLIP
+  aggregation_strategy: FEDAVG
+  alpha: 0.5
+  attack: NO_ATTACK
   batch_size: 64
-  dataset: mnist #mstz/kddcup #scikit-learn/adult-census-income #mstz/covertype
-  global_epochs: 50
+  dataset: mnist
+  global_epochs: 5
   learning_rate: 0.001
   local_DP_SGD: false
   local_epochs: 4
   num_attackers: 10
   num_clients: 50
-  partition_type: non-iid
-  sampled_clients: 50
+  partition_type: iid
+  sampled_clients: 40
   seed: 42
 model:
-  type: KDD
+  type: FCMNIST

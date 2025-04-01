@@ -387,6 +387,7 @@ class AttackServer(Server):
 
     def run_federated_training(self):
         self.logger.info("Starting federated training with attacks.")
+        self.epoch_results = []  
         for epoch in range(1, self.global_epoch + 1):
             self.logger.info(f"Global Epoch {epoch} started.")
             if self.aggregation_method in {KeTS, KeTSV2}:
@@ -417,6 +418,7 @@ class AttackServer(Server):
             
     
             accuracy = self._evaluate_global_model(epoch)
+            self.epoch_results.append((epoch, accuracy)) 
 
             self.logger.info(f"Global Epoch {epoch} completed.")
         self.logger.info("Federated training with attacks completed.")
@@ -588,6 +590,7 @@ class FLTrust(AttackServer):
         
 
     def run_federated_training(self):
+        self.epoch_results = []  # new: initialize results list
         self.logger.info("Starting federated training with attacks.")
         for epoch in range(1, self.global_epoch + 1):
             self.logger.info(f"Global Epoch {epoch} started.")
@@ -614,6 +617,7 @@ class FLTrust(AttackServer):
                 torch.device(self.device)
             )
             accuracy = self._evaluate_global_model(epoch)
-            self.logger.info(f"Global Epoch {epoch} completed.")
+            self.epoch_results.append((epoch, accuracy))  
+            
         self.logger.info("Federated training with attacks completed.")
         return accuracy

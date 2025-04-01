@@ -6,7 +6,7 @@ from utils.models import MNISTCNN, FCMNIST, ZalandoCNN, FNet
 from utils.constants import ALLOWED_FILTERS
 from utils.config import load_config
 from utils.db import get_session,get_engine , SimulationResult
-from backend.dataset.dataset import FederatedDataLoader, DatasetHandler, server_dataset
+from dataset.dataset import FederatedDataLoader, DatasetHandler, server_dataset
 from server import FLTrust, AttackServer, AggregationStrategy, AttackType
 from utils.seeding import set_deterministic_mode
 
@@ -63,11 +63,7 @@ def start_federated_learning():
         # Instantiate either FLTrust or AttackServer
         attack_type = AttackType[federated_cfg['attack'].upper()]
         if federated_cfg['aggregation_strategy'].upper() == 'FLTRUST':
-            server_data_loader = server_dataset(
-                federated_cfg['dataset'],
-                federated_cfg['batch_size'],
-                device
-            )
+            server_data_loader = dataset_handler.server_dataset(batch_size=federated_cfg['batch_size'])
             server = FLTrust(
                 server_data_loader=server_data_loader,
                 attack_type=attack_type,

@@ -1,133 +1,185 @@
 # FL Simulator
 
+FL Simulator is a federated learning simulation platform designed for both academic research and industrial applications. By leveraging [Ray](https://www.ray.io) for parallel training and a flexible Python-based backend alongside a [Streamlit](https://streamlit.io) frontend, the platform enables rapid experimentation with various federated learning scenarios, attack schemes, and defense mechanisms.
 
-FL Simulator is a federated learning simulation platform that leverages [Ray](https://www.ray.io) for parallel training, significantly speeding up simulations and optimizing resource usage. The project consists of a Python-based backend and a [Streamlit](https://streamlit.io) frontend, enabling you to configure parameters, run simulations, and execute queries interactively. It also offers various attack and defense schemes to study the robustness and security of federated learning settings.
+## Table of Contents
+
+- [Key Features](#key-features)
+- [Project Structure](#project-structure)
+- [Installation & Setup](#installation--setup)
+- [Usage](#usage)
+  - [Running Locally](#running-locally)
+  - [Using Docker](#using-docker)
+- [Configuration](#configuration)
+- [Attack & Defense Schemes](#attack--defense-schemes)
+- [Logging & Querying](#logging--querying)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Key Features
 
-- **Attack Schemes:**  
-  Supports a wide range of adversarial attacks such as:
-  - **Label Flip Attacks**  
-  - **Min-Max & Min-Sum Attacks**  
-  - **Krum & Trim Attacks**  
-  - **Gaussian**
-  - **Sign Flip Attacks** 
-  - **Advanced Variants (e.g., MIN_MAX_V2, MIN_SUM_V2)**
-  
-- **Defense Mechanisms:**  
-  Integrated defenses include aggregation strategies like:
-  - **FEDAVG, KRUM, MEDIAN, TRIM_MEAN**  
-  - **KeTS & DWT-based Methods**  
-  - **FLTRUST** and other custom schemes to mitigate the impact of attacks.
-  
-- **Datasets & Models:**  
-  The platform supports several popular datasets and model architectures, including:
-  - **Datasets:** MNIST, Fashion-MNIST, and more.
-  
-  
-- **Differential Privacy:**  
-  Leverages [Opacus](https://opacus.ai/) to incorporate differential privacy, ensuring that simulation experiments can be conducted in a privacy-preserving manner.
-  
-- **Modular & Extensible:**  
-  Designed in a highly modular fashion so that new attacks, defense techniques, datasets, or models can be easily integrated. The backend includes a Flask API and a Streamlit frontend for interactive configuration and monitoring.
-  
-- **Logging & Querying:**  
-  Provides rich logging functionality and exposes a dedicated endpoint for querying a SQL database storing all past experiments, enabling you to retrieve historical simulation data easily.
+- **Scalable Federated Learning:**  
+  Fully distributed simulations leveraging Ray for parallel client training to reduce run-times.
 
-FL Simulator empowers you to perform comprehensive experiments on the robustness and security of federated learning, providing a platform that is ideal for academic research and industrial applications.
+- **Modular Design:**  
+  Easily extend the platform with custom attack methods, defense mechanisms, datasets, and models.
+
+- **Wide Range of Attacks:**  
+  Experiment with many adversarial attack schemes such as:
+  - *Label Flip Attacks*
+  - *Min-Max & Min-Sum Attacks* (including advanced variants like MIN_MAX_V2, MIN_SUM_V2)
+  - *Krum & Trim Attacks*
+  - *Gaussian Noise Attacks*
+  - *Sign Flip Attacks*
+
+- **Aggregation Strategies:**  
+  Supports multiple aggregation strategies to counteract adversarial attacks:
+  - FEDAVG
+  - KRUM
+  - MEDIAN
+  - TRIM_MEAN
+  - KeTS (and its variants)
+  - FLTRUST
+  - And custom, DWT-based methods
+
+- **Built-in Differential Privacy:**  
+  Integrates [Opacus](https://opacus.ai/) to enable differentially private training, ensuring privacy-preserving simulations.
+
+- **Interactive Frontend:**  
+  Uses Streamlit for a user-friendly interface to set simulation parameters, monitor training, and query past experiment results.
+
+- **Comprehensive Logging & Database Querying:**  
+  Logs simulation details to the console and stores results in a SQL database for historical tracking and further analysis.
 
 ## Project Structure
 
-- **backend/** – Python backend code including simulation logic and configuration handling ([`backend/utils/config.py`](c:\Users\39340\FL_Simulator\backend\utils\config.py)).
-- **streamlit_app.py** – The Streamlit application for interacting with the simulation ([`streamlit_app.py`](c:\Users\39340\FL_Simulator\streamlit_app.py)).
-- **docker-compose.yml** – Docker Compose configuration to orchestrate the services.
+- **backend/** – Contains the Python backend code that implements the simulation logic, configuration handling, database integration, and API endpoints.
+  - *utils/* – Utility modules for configuration, logging, and database management.
+  - *app/* – Flask application with routes for simulation, configuration, and query execution.
+  - *server.py* – Core logic for training process , attacks and defense management.
+  -*client.py* - Core logic for client training 
+- **streamlit_app.py** – The Streamlit-based frontend for interactive simulation configuration and monitoring.
+- **docker-compose.yml** – Docker Compose configuration for orchestrating the services.
 - **Dockerfile-streamlit** – Dockerfile to build the Streamlit container.
 - **requirements.txt** – List of required Python packages.
+- **README.md** – This file.
 
-## Getting Started
+## Installation & Setup
 
 ### Prerequisites
 
 - [Python 3.10+](https://www.python.org/downloads/)
-- [Docker](https://docs.docker.com/get-docker/) (if running with Docker)
+- [Docker](https://docs.docker.com/get-docker/) (optional, if you want to run with Docker)
 - pip
 
 ### Local Setup
 
-1. **Clone the repository:**
+1. **Clone the Repository:**
 
    ```sh
    git clone <repository_url>
    cd FL_Simulator
    ```
 
-2. **Create and activate a virtual environment:**
+2. **Create & Activate Virtual Environment:**
 
-   ```sh
-   python -m venv venv
-   source venv/bin/activate   # On Windows: venv\Scripts\activate
-   ```
+   - On Linux/macOS:
+     ```sh
+     python -m venv venv
+     source venv/bin/activate
+     ```
+   - On Windows:
+     ```sh
+     python -m venv venv
+     venv\Scripts\activate
+     ```
 
-3. **Install dependencies:**
+3. **Install Dependencies:**
 
    ```sh
    pip install -r requirements.txt
    ```
 
-### Running the Project Locally
+## Usage
 
-1. **Start the backend:**
+### Running Locally
 
-   Launch your Python backend (for example, if your backend entry point is `main.py`):
+1. **Start the Backend:**
+
+   In one terminal window, navigate to the project directory and run:
 
    ```sh
    python backend/main.py
    ```
 
-2. **Start the Streamlit app:**
+2. **Start the Streamlit Frontend:**
 
-   In a separate terminal, run:
+   In another terminal window, run:
 
    ```sh
    streamlit run streamlit_app.py
    ```
 
-Access the Streamlit interface in your browser at `http://localhost:8501`.
+3. **Access the Application:**
 
-## Docker Setup
+   Open your browser and navigate to [http://localhost:8501](http://localhost:8501) to interact with the UI.
 
-You can run the entire project using Docker.
+### Using Docker
 
-1. **Build and run the containers using Docker Compose:**
+1. **Build & Run Containers:**
 
    ```sh
    docker-compose up --build
    ```
 
-   This command will:
-   - Launch the backend service.
-   - Build and launch the Streamlit app using [Dockerfile-streamlit](Dockerfile-streamlit).
-
-2. **Access the services:**
-
-   - The Streamlit app will be available at `http://localhost:8501`.
-   - The backend service should be running as specified in its Docker configuration.
+2. **Access the Services:**
+   - Streamlit app: [http://localhost:8501](http://localhost:8501)
+   - Backend service: as specified in your Docker configuration
 
 ## Configuration
 
-The backend configuration is managed via a YAML file and loaded in [`backend/utils/config.py`](c:\Users\39340\FL_Simulator\backend\utils\config.py) using the `load_config` function. Ensure that any overrides follow the schema defined in the `Config` model.
+The platform uses a YAML-based configuration system managed by the backend. The configuration file is loaded via `backend/utils/config.py` following the schema defined in the `Config` model. You can override default configurations through the Streamlit UI.
 
-## Usage
+Example configuration parameters include:
 
-- **Set Parameters:** Configure simulation parameters using the form in the Streamlit app.
-- **Run Simulation:** Start simulation runs from the "Run Simulation" section in the app.
-- **Execute Query:** Use the interactive query page to inspect simulation results.
+- **Model Type:** e.g., FCMNIST, FNet, Adult, COVERTYPE, etc.
+- **Dataset:** e.g., mnist, fashion_mnist, scikit-learn/adult-census-income, etc.
+- **Federated Settings:** Number of clients, sampled clients, global/local epochs, learning rate, batch size, etc.
+- **Security Settings:** Type of attack (SIGN_FLIP, MIN_MAX, LABEL_FLIP, etc.), number of attackers, aggregation strategy (FEDAVG, KRUM, MEDIAN, etc.)
+- **Differential Privacy:** Enable or disable local DP-SGD through the configuration.
 
-## Logging
+## Attack & Defense Schemes
 
-The project uses Python's logging module. Logs will be output to the console for easy debugging.
+The system supports a comprehensive suite of adversarial attack techniques along with robust defense mechanisms to mitigate them. The backend routes and servers have specialized logic to implement:
 
+- **Attack Schemes:**  
+  Utilize methods like label flipping, sign flipping, min-max, and more. Advanced variants (e.g., MIN_MAX_V2) are also implemented within the training logic.
 
-## Contributions
+- **Defense Strategies:**  
+  After simulating adversarial behaviors, the server aggregates client updates using strategies like:
+  - Standard averaging (FEDAVG)
+  - Robust aggregation (KRUM, MEDIAN, TRIM_MEAN)
+  - Custom methods like KeTS and FLTRUST, which include additional trust/similarity scoring mechanisms.
 
-Feel free to open issues or pull requests if you'd like to contribute!
+## Logging & Querying
+
+- **Logging:**  
+  The project uses Python’s logging module for real-time diagnostics and debugging. Logs are output to the console and can be redirected as needed.
+
+- **Querying:**  
+  Simulation results are stored in a SQL database. The platform provides an interactive query endpoint (accessible via the Streamlit app) for retrieving past results based on various filters (e.g., dataset, attack type, aggregation strategy).
+
+## Contributing
+
+Contributions are welcome! If you have ideas for new features or improvements:
+- Open an Issue to discuss your ideas.
+- Submit a Pull Request with your improvements.
+- Follow the existing coding style and include clear commit messages.
+
+## License
+
+This project is licensed under [MIT License](LICENSE).
+
+---
+
+FL Simulator empowers researchers and practitioners to explore the intersection of federated learning and adversarial robustness. With its modular design and extensive configuration options, it serves as a powerful tool for simulating complex learning scenarios and evaluating defense strategies in a privacy-preserving manner.
