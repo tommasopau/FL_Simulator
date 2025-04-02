@@ -235,3 +235,51 @@ class KDDSimpleNN(BaseModel):
         x = F.relu(self.fc3(x))
         x = self.fc4(x)
         return x
+    
+    
+
+class TinyVGG(BaseModel):
+    """
+    TinyVGG model for CIFAR-10.
+
+    Architecture:
+      - Block 1:
+          - Conv2d with 3 input channels and 64 output channels, kernel size 3, padding 1
+          - ReLU activation
+          - Conv2d with 64 input channels and 64 output channels, kernel size 3, padding 1
+          - ReLU activation
+          - MaxPool2d with kernel size 2 and stride 2
+      - Block 2:
+          - Conv2d with 64 input channels and 128 output channels, kernel size 3, padding 1
+          - ReLU activation
+          - Conv2d with 128 input channels and 128 output channels, kernel size 3, padding 1
+          - ReLU activation
+          - MaxPool2d with kernel size 2 and stride 2
+      - Classifier:
+          - Flatten layer
+          - Linear layer mapping 128 * 8 * 8 features to 10 output classes
+    """
+    def __init__(self, num_classes=10):
+        super().__init__()
+        self.features = nn.Sequential(
+            nn.Conv2d(3, 64, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(64, 64, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            
+            nn.Conv2d(64, 128, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(128, 128, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+        self.classifier = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(128 * 8 * 8, num_classes)
+        )
+
+    def forward(self, x):
+        x = self.features(x)
+        x = self.classifier(x)
+        return x
