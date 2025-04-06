@@ -2,13 +2,12 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-# Copy dependencies – update requirements file name/path if needed.
-# If you use a single top-level requirements.txt for streamlit and other common dependencies, you can copy that.
+# Copy dependencies
 COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Additionally install streamlit if not already included in requirements.txt
+# Install Streamlit if not included in requirements
 RUN pip install streamlit
 
 # Copy the entire project

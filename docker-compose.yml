@@ -9,7 +9,6 @@ services:
       - "8000:8000"
     environment:
       - FLASK_ENV=production
-    # Optionally set a healthcheck so Streamlit waits for backend readiness
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/"]
       interval: 10s

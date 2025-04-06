@@ -190,6 +190,8 @@ class DatasetHandlerTab(AbstractDatasetHandler):
         """
         dataset.dropna(inplace=True)
         
+        dataset.drop_duplicates(inplace=True, ignore_index=True)
+        
         
             
         
@@ -247,10 +249,11 @@ class DatasetHandlerTab(AbstractDatasetHandler):
         if self.datasetID == 'mstz/covertype':
             self.fds = FederatedDataset(dataset=self.datasetID, subset='covertype', partitioners={"train": partitioner})
         elif self.datasetID == 'mstz/kddcup':
-            # Load the dataset from Hugging Face and downsample it to 500k rows
             dataset = load_dataset(self.datasetID, split='train')
-            dataset = pd.DataFrame(dataset).drop_duplicates()
-            dataset = dataset.shuffle(seed=self.seed).select(range(400000))
+            
+            dataset = dataset.shuffle(seed=88).select(range(800000))
+            
+            
             logging.info(f"Loaded {len(dataset)} rows from the dataset.")
             self.fds = CustomFederatedDataset(dataset={'train': dataset}, partitioners={"train": partitioner})
         
