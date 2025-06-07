@@ -1,12 +1,11 @@
 from sqlalchemy import and_
-from utils.constants import ALLOWED_FILTERS
-from utils.db import get_session, get_engine, SimulationResult
+from backend.utils.constants import ALLOWED_FILTERS
+from backend.db import SimulationResult
+from backend.db import db
 
 def filter_query(filters):
-    engine = get_engine()
-    session = get_session(engine)
     try:
-        query = session.query(SimulationResult)
+        query = db.session.query(SimulationResult)
         filter_conditions = []
         for f in filters:
             field = f.get('field')
@@ -46,5 +45,5 @@ def filter_query(filters):
             item.pop('_sa_instance_state', None)
         
         return data
-    finally:
-        session.close()
+    except Exception as e:
+        raise ValueError(f"Error executing query: {str(e)}")

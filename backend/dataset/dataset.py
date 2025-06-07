@@ -1,8 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
-from utils.constants import NORMALIZATION_PARAMS, TARGET_LABELS
+from backend.utils.constants import NORMALIZATION_PARAMS, TARGET_LABELS
 import pandas as pd
-from sklearn.model_selection import train_test_split
 import random
 import torch
 import numpy as np
@@ -347,36 +346,3 @@ class FederatedDataLoader:
             pin_memory=True if self.device == 'cuda' else False
         )
 
-
-#----SERVER FLTRUST 
-
-def server_dataset(datasetID: str, batch_size: int, device: str) -> DataLoader:
-        """
-        Load the server dataset for FLTRUST
-        """
-        if datasetID not in ['mnist', 'cifar10', 'fashion_mnist']:
-            fds = FederatedDataset(dataset=datasetID, partitioners={"train": IidPartitioner(num_partitions=600)})
-            df = fds.load_partition(0).with_format('pandas')[:]
-            # Use the static method from DatasetHandlerTab
-            transformed_dataset = DatasetHandlerTab.transform_client_dataset(df)
-            
-            return DataLoader(
-                transformed_dataset,
-                batch_size=batch_size,
-                shuffle=True,
-                num_workers=0,
-                pin_memory=True if device == 'cuda' else False
-            )
-            
-            
-        else:
-            fds = FederatedDataset(dataset=datasetID, partitioners={"train": IidPartitioner(num_partitions=600)})
-            transform = lambda batch: DatasetUtils.apply_transforms(batch, dataset_type=datasetID)
-            server_dataset = fds.load_partition(0).with_transform(transform)
-            return DataLoader(
-                server_dataset,
-                batch_size=batch_size,
-                shuffle=True,
-                num_workers=0,
-                pin_memory=True if device == 'cuda' else False
-            )

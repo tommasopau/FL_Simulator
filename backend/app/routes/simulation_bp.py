@@ -1,19 +1,18 @@
-from flask import Blueprint, jsonify
-import torch
+from flask import Blueprint, jsonify, request
 import logging
 import ray
-from utils.models import MNISTCNN, FCMNIST, ZalandoCNN, FNet
-from utils.constants import ALLOWED_FILTERS , MODEL_MAPPING
-from utils.config import load_config , serialize_config , validate_config
-from utils.db import get_session,get_engine , SimulationResult
-from dataset.dataset import FederatedDataLoader, DatasetHandler, server_dataset
-from server import FLTrustServer, AttackServer, AggregationStrategy, AttackType
-from utils.seeding import set_deterministic_mode
-from app.services.simulation_services import initialize_model_device , load_datasets , create_server ,store_simulation_result
+from backend.utils.config import serialize_config, validate_config
+from backend.utils.seeding import set_deterministic_mode
+from backend.app.services.simulation_services import (
+    initialize_model_device,
+    load_datasets,
+    create_server,
+    store_simulation_result
+)
 
 sim_bp = Blueprint('simulation_bp', __name__)
 
-@sim_bp.route('/simulation', methods=['GET'])
+@sim_bp.route('/simulation', methods=['POST'])
 def start_federated_learning():
     ray.init()
     logger = logging.getLogger(__name__)
@@ -21,16 +20,21 @@ def start_federated_learning():
     try:
         logger.info("Main process started.")
         
-        config = serialize_config(load_config('config.yaml'))
+        # Get configuration from the API payload
+        config = request.json
+        if not config:
+            return jsonify({"error": "No configuration provided"}), 400
+        
+        #config = serialize_config(config_input)
         validate_config(config)
         federated_cfg = config['federated_learning']
         
         set_deterministic_mode(config.get('seed', 42)) 
         
-        global_model , device = initialize_model_device(config)
+        global_model, device = initialize_model_device(config)
         logger.info(f"Using device: {device}")
         
-        fed_data_loader = load_datasets(federated_cfg , device)
+        fed_data_loader = load_datasets(federated_cfg, device)
         
         server = create_server(federated_cfg, global_model, device, fed_data_loader)
         

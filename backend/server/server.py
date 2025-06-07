@@ -1,99 +1,21 @@
 import torch
 import numpy as np  
-from torch import nn
-from typing import List, Dict, Optional, Tuple, Callable
-import logging
+from torch import nn, optim
 from torch.nn import Module
 import torch.nn.functional as F
-from torch import optim
-from aggregation_techniques.aggregation import (
-    fedavg,
-    krum,
-    median_aggregation,
-    trim_mean,
-    KeTS,
-    DCT,
-    DCT_K,
-    DCT_raw,
-    KeTSV2,
-    KeTS_MedTrim
-    
-)
-from enum import Enum, auto
-import copy
+from typing import List, Dict, Tuple, Callable
+import logging
 import random
-import ray  
-from dataset.dataset import FederatedDataLoader
-from client import Client
-from attacks import (
-    min_max_attack, min_sum_attack, krum_attack, trim_attack, no_attack,
-    gaussian_attack, label_flip_attack, min_max_attack_rand_noise, sign_flip_attack,
-    min_sum_attack_rand_noise , min_max_attack_ortho , min_sum_attack_ortho
-)
+import copy
+import ray
+from backend.server.server_config import AggregationStrategy, aggregation_methods, AttackType, attacks
+from backend.dataset.dataset import FederatedDataLoader
+from backend.client import Client
 
 
-class AggregationStrategy(Enum):
-    FEDAVG = auto()
-    KRUM = auto()
-    MEDIAN = auto()
-    TRIM_MEAN = auto()
-    KeTS = auto()
-    DCT = auto()
-    FLTRUST = auto()
-    DCT_K = auto()
-    DCT_raw = auto()
-    KeTSV2 = auto()
-    KeTS_MedTrim = auto()
-#Enumeration that is later mapped to each aggregation method. The auto() function is used to automatically assign unique values to each member.
 
-aggregation_methods = {
-    AggregationStrategy.FEDAVG: fedavg,
-    AggregationStrategy.KRUM: krum,
-    AggregationStrategy.MEDIAN: median_aggregation,
-    AggregationStrategy.TRIM_MEAN: trim_mean,
-    AggregationStrategy.KeTS: KeTS,
-    AggregationStrategy.DCT: DCT,
-    AggregationStrategy.FLTRUST: None,
-    AggregationStrategy.DCT_K: DCT_K,
-    AggregationStrategy.DCT_raw: DCT_raw,
-    AggregationStrategy.KeTSV2: KeTSV2,
-    AggregationStrategy.KeTS_MedTrim: KeTS_MedTrim
-    
-}
-
-class AttackType(Enum):
-    NO_ATTACK = auto()
-    MIN_MAX = auto()
-    MIN_SUM = auto()
-    KRUM = auto()
-    TRIM = auto()
-    GAUSSIAN = auto()
-    LABEL_FLIP = auto()
-    MIN_MAX_V2 = auto()
-    MIN_SUM_V2 = auto()
-    SIGN_FLIP = auto()
-    MIN_MAX_V3 = auto()
-    MIN_SUM_V3 = auto()
-    
-#Enumeration that is later mapped to each attack method. The auto() function is used to automatically assign unique values to each member.
-
-attacks = {
-    AttackType.MIN_MAX: min_max_attack,
-    AttackType.MIN_SUM: min_sum_attack,
-    AttackType.KRUM: krum_attack,
-    AttackType.TRIM: trim_attack,
-    AttackType.NO_ATTACK: no_attack,
-    AttackType.GAUSSIAN: gaussian_attack,
-    AttackType.LABEL_FLIP: label_flip_attack,
-    AttackType.MIN_MAX_V2: min_max_attack_rand_noise,
-    AttackType.MIN_SUM_V2: min_sum_attack_rand_noise,
-    AttackType.SIGN_FLIP: sign_flip_attack,
-    AttackType.MIN_MAX_V3: min_max_attack_ortho,
-    AttackType.MIN_SUM_V3: min_sum_attack_ortho
-    
-}
 @ray.remote
-def train_client(client_id, client_loader, global_model, local_epochs, learning_rate, device , dp):
+def train_client(client_id, client_loader, global_model, local_epochs, learning_rate, device, dp):
         '''
         # Initialize logger in the remote function
         logger = logging.getLogger(f"client_{client_id}")
@@ -107,7 +29,7 @@ def train_client(client_id, client_loader, global_model, local_epochs, learning_
         
         logger.info(f"Training client {client_id}")
         '''
-        client = Client(client_id, client_loader,dp)
+        client = Client(client_id, client_loader, dp)
         return client.train(
             global_model=copy.deepcopy(global_model),
             local_epochs=local_epochs,
@@ -163,7 +85,7 @@ class Server:
 
         self.federated_data_loader = federated_data_loader
         self.num_clients = self.federated_data_loader.dataset_handler.num_clients
-        self.sampled = sampled # Number of clients to sample per round
+        self.sampled = sampled 
         self.test_loader = self.federated_data_loader._get_test_data()
 
         self.global_model = global_model.to(self.device)
@@ -177,8 +99,10 @@ class Server:
             self.logger.error(f"Aggregation strategy {aggregation_strategy} is not supported.")
             raise ValueError(f"Unsupported aggregation strategy: {aggregation_strategy}")
 
-        self.aggregation_method = aggregation_methods[aggregation_strategy]
-        self.aggregation_kwargs = kwargs  # Store additional kwargs for aggregation
+        self.aggregation_method = aggregation_methods[aggregation_strategy] #the direct dunction
+        self.aggregation_strategy = aggregation_strategy #enum value needed to compare it with the name 
+        
+        self.aggregation_kwargs = kwargs  
 
     def _order_clients_by_attackers(
         self, sampled_clients: List[int]
@@ -198,8 +122,13 @@ class Server:
         Returns:
             List[Tuple[int, Dict[str, torch.Tensor]]]: A list of tuples pairing the client ID with its update.
         """
+        if self.device == 'cuda':
+            train_func = train_client.options(num_gpus=0.2)
+        else:
+            train_func = train_client
+
         futures = [
-            train_client.remote(
+            train_func.remote(
                 client_id,
                 self.federated_data_loader._get_client_data(client_id),
                 copy.deepcopy(self.global_model),
@@ -284,15 +213,16 @@ class Server:
 
         aggregation_kwargs = self.aggregation_kwargs.copy() # Copy to avoid modifying the original dict
         
-        if self.aggregation_method in {KeTS, DCT, DCT_raw, KeTSV2}:
+        if self.aggregation_strategy in {AggregationStrategy.KeTS, AggregationStrategy.KeTSV2}:
             aggregation_kwargs.update({
             'trust_scores': self.trust_scores,
             'last_updates': self.last_updates,
             'baseline_decreased_score': 0.02,
-            'last_global_update': self
+            'last_global_update': self,
+            'trust_scores2': self.trust_scores2
             })
 
-        # Call the selected aggregation method
+        
         try:
             self.aggregation_method(
                 gradients=gradients,
@@ -373,10 +303,12 @@ class AttackServer(Server):
     def __init__(self, attack_type: AttackType, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.attack_method = attacks[attack_type]
-        if self.aggregation_method in {KeTS, DCT, DCT_raw, KeTSV2}:
+        if self.aggregation_strategy in {AggregationStrategy.KeTS, AggregationStrategy.KeTSV2}:
             self.trust_scores = {cid: 1.0 for cid in range(self.num_clients)}
             self.last_updates = {cid: None for cid in range(self.num_clients)}
             self.last_global_update = None
+            
+            self.trust_scores2 = {cid: 1.0 for cid in range(self.num_clients)}
     
     def _compute_attack(self, updates, lr,num_attackers_epoch ,f):
         self.logger.info(f"{self.attack_method.__name__} attack computed.")
@@ -390,7 +322,7 @@ class AttackServer(Server):
         self.epoch_results = []  
         for epoch in range(1, self.global_epoch + 1):
             self.logger.info(f"Global Epoch {epoch} started.")
-            if self.aggregation_method in {KeTS, KeTSV2}:
+            if self.aggregation_strategy in {AggregationStrategy.KeTS, AggregationStrategy.KeTSV2}:
                 sampled_client_ids , number_of_attackers_epoch = self._sample_from_weights(self.trust_scores, self.sampled)
             else:   
                 sampled_client_ids , number_of_attackers_epoch = self._sample_clients(self.sampled)
@@ -404,12 +336,12 @@ class AttackServer(Server):
                 client_updates[i] = (cid, {'flattened_diffs' : attacked_updates[i] , 'data_size' : update['data_size']})
 
             self._aggregate_client_updates(client_updates)
-            if self.aggregation_method in {KeTS, DCT, DCT_raw, KeTSV2}:
+            if self.aggregation_strategy in {AggregationStrategy.KeTS, AggregationStrategy.KeTSV2}:
                 for cid, attacked_update in client_updates:
                     if self.last_updates[cid] is None:
                         self.last_updates[cid] = attacked_update['flattened_diffs']
                     else:
-                        ema_alpha = 0.3
+                        ema_alpha = 1
                         self.last_updates[cid] = (
                             ema_alpha * attacked_update['flattened_diffs'] +
                             (1 - ema_alpha) * self.last_updates[cid]
@@ -465,7 +397,7 @@ class FLTrustServer(AttackServer):
         self.logger.info(f"Server started training.")
         
 
-        # Create a new model and load global state
+        
         server_model = copy.deepcopy(global_model).to(device)
         server_model.load_state_dict(global_model.state_dict())
         

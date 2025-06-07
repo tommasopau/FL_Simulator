@@ -1,5 +1,5 @@
 import torch
-from utils.constants import MODEL_MAPPING
+from backend.utils.constants import MODEL_MAPPING
 
 def initialize_model_device(config):
     # Setup device and model
@@ -16,7 +16,7 @@ def initialize_model_device(config):
 
 
 
-from dataset.dataset import FederatedDataLoader, DatasetHandler
+from backend.dataset.dataset import FederatedDataLoader, DatasetHandler
 
 def load_datasets(federated_cfg, device):
     dataset_handler = DatasetHandler(
@@ -42,7 +42,7 @@ def load_datasets(federated_cfg, device):
     return federated_data_loader 
 
 
-from server import FLTrustServer, AttackServer, AggregationStrategy, AttackType
+from backend.server.server import FLTrustServer, AttackServer, AggregationStrategy, AttackType
 
 def create_server(federated_cfg, global_model, device, fed_data_loader):
     """
@@ -87,11 +87,9 @@ def create_server(federated_cfg, global_model, device, fed_data_loader):
 
 
 
-from utils.db import get_engine, get_session, SimulationResult
+from backend.db import db, SimulationResult
 
 def store_simulation_result(config, federated_cfg, accuracy):
-    engine = get_engine()
-    session = get_session(engine)
     result = SimulationResult(
         dataset=federated_cfg['dataset'],
         num_clients=federated_cfg['num_clients'],
@@ -110,6 +108,6 @@ def store_simulation_result(config, federated_cfg, accuracy):
         model_type=config['model']['type'],
         accuracy=accuracy
     )
-    session.add(result)
-    session.commit()
+    db.session.add(result)
+    db.session.commit()
     return 

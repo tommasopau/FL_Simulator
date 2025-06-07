@@ -1,9 +1,6 @@
 from flask import Blueprint, request, jsonify
 import logging
-from sqlalchemy import and_
-from utils.constants import ALLOWED_FILTERS
-from utils.db import get_session, get_engine , SimulationResult
-from app.services.query_services import filter_query
+from backend.app.services.query_services import filter_query
 
 query_bp = Blueprint('query_bp', __name__)
 

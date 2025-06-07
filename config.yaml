@@ -1,16 +1,16 @@
 federated_learning:
-  aggregation_strategy: FLTRUST
-  alpha: 1.0
-  attack: LABEL_FLIP
+  aggregation_strategy: FEDAVG
+  alpha: 0.5
+  attack: MIN_MAX
   batch_size: 64
   dataset: mnist
-  global_epochs: 20
+  global_epochs: 5
   learning_rate: 0.001
   local_DP_SGD: false
   local_epochs: 4
   num_attackers: 10
   num_clients: 50
-  partition_type: non-iid
+  partition_type: iid
   sampled_clients: 40
   seed: 42
 model:
