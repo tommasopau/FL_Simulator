@@ -1,8 +1,10 @@
 .conda/
 simulation.db
-backend/simulationResearch.py
-backend/results.txt/
-backend/simulation_epoch_results.txt/
+simulationResearch.py
+results.txt
+backend/attacks/research_att.py
+simulation_epoch_results.txt
 backend/attacks/attacks.py
+.env/
 __pycache__/
 *.pyc
