@@ -10,12 +10,12 @@ import copy
 import ray
 from backend.server.server_config import AggregationStrategy, aggregation_methods, AttackType, attacks
 from backend.dataset.dataset import FederatedDataLoader
-from backend.client import Client
+from backend.client import Client , FedProxClient
 
 
 
 @ray.remote
-def train_client(client_id, client_loader, global_model, local_epochs, learning_rate, device, dp):
+def train_client(client_id, client_loader, global_model, local_epochs, learning_rate, device, dp , fedprox , fedprox_mu, optimizer, momentum):
         '''
         # Initialize logger in the remote function
         logger = logging.getLogger(f"client_{client_id}")
@@ -29,11 +29,16 @@ def train_client(client_id, client_loader, global_model, local_epochs, learning_
         
         logger.info(f"Training client {client_id}")
         '''
-        client = Client(client_id, client_loader, dp)
+        if fedprox:
+            client = FedProxClient(client_id, client_loader, dp , fedprox_mu)
+        else:
+            client = Client(client_id, client_loader, dp)
         return client.train(
             global_model=copy.deepcopy(global_model),
             local_epochs=local_epochs,
             learning_rate=learning_rate,
+            optimizer=optimizer,
+            momentum=momentum,
             device=device,
         )    
 
@@ -46,63 +51,80 @@ class Server:
 
     def __init__(
         self,
+        # Core FL components (required)
         federated_data_loader: FederatedDataLoader,  
         global_model: nn.Module,
+        
+        # FL Configuration (required)
         aggregation_strategy: AggregationStrategy,
+
         sampled: int,
-        global_epochs: int = 0,
-        local_epochs: int = 1,
+        global_epochs: int,
+        local_epochs: int,
+        
+        # Training hyperparameters
         learning_rate: float = 0.01,
         batch_size: int = 32,
-        local_dp: bool = False,
-        device: str = 'cpu',
-        f: int = 0,
-        **kwargs
-    ):
-        """
-        Initialize the Server.
-
-        Args:
-            federated_data_loader (FederatedDataLoader): Instance of FederatedDataLoader.
-            global_model (nn.Module): The global model to be trained.
-            aggregation_strategy (AggregationStrategy): Selected aggregation strategy.
-            global_epochs (int, optional): Starting global epoch. Defaults to 0.
-            local_epochs (int, optional): Number of local epochs for training. Defaults to 1.
-            learning_rate (float, optional): Learning rate for optimizers. Defaults to 0.01.
-            batch_size (int, optional): Batch size for data loaders. Defaults to 32.
-            device (str, optional): Device to run the training on. Defaults to 'cpu'.
-            f (int, optional): Number of malicious clients. Defaults to 0.
-            **kwargs: Additional arguments for the aggregation method.
-        """
         
-        self.global_epoch = global_epochs
-        self.local_epochs = local_epochs
-        self.learning_rate = learning_rate
-        self.batch_size = batch_size
-        self.device = device
-        self.f = f
-        self.local_dp = local_dp
-
+        # Optimizer configuration
+        optimizer: str = 'SGD',
+        momentum: float = 0.9,
+        weight_decay: float = 0.0,
+        
+        # Advanced FL techniques
+        local_dp: bool = False,
+        fedprox: bool = False,
+        fedprox_mu: float = 0.01,
+        
+        # System configuration
+        device: str = 'cpu',
+        
+        # Attack configuration
+        f: int = 0,
+        **kwargs,
+    ):
+        # Core FL components
         self.federated_data_loader = federated_data_loader
         self.num_clients = self.federated_data_loader.dataset_handler.num_clients
-        self.sampled = sampled 
-        self.test_loader = self.federated_data_loader._get_test_data()
-
-        self.global_model = global_model.to(self.device)
+        self.global_model = global_model
         self.global_parameters = self.global_model.state_dict()
-
-        self.logger = logging.getLogger(__name__)
-        self.logger.info("Server initialized.")
-
-        # Set the aggregation method based on strategy
-        if aggregation_strategy not in aggregation_methods:
-            self.logger.error(f"Aggregation strategy {aggregation_strategy} is not supported.")
-            raise ValueError(f"Unsupported aggregation strategy: {aggregation_strategy}")
-
-        self.aggregation_method = aggregation_methods[aggregation_strategy] #the direct dunction
-        self.aggregation_strategy = aggregation_strategy #enum value needed to compare it with the name 
+        self.test_loader = self.federated_data_loader._get_test_data()
         
+        # FL Configuration
+        self.aggregation_strategy = aggregation_strategy
+
+        self.sampled = sampled
+        self.global_epochs = global_epochs
+        self.local_epochs = local_epochs
+        
+        # Training hyperparameters
+        self.learning_rate = learning_rate
+        self.batch_size = batch_size
+        
+        # Optimizer configuration
+        self.optimizer = optimizer
+        self.momentum = momentum
+        self.weight_decay = weight_decay
+        
+        # Advanced FL techniques
+        self.local_dp = local_dp
+        self.fedprox = fedprox
+        self.fedprox_mu = fedprox_mu
+        
+        # System configuration
+        self.device = device
+        
+        # Attack configuration
+        self.f = f
+        
+        # Initialize aggregation method
+        self.aggregation_method = aggregation_methods[aggregation_strategy]
+        
+        
+        
+        self.logger = logging.getLogger(self.__class__.__name__)
         self.aggregation_kwargs = kwargs  
+        
 
     def _order_clients_by_attackers(
         self, sampled_clients: List[int]
@@ -135,7 +157,11 @@ class Server:
                 self.local_epochs,
                 self.learning_rate,
                 self.device,
-                self.local_dp
+                self.local_dp,
+                self.fedprox,
+                self.fedprox_mu, 
+                self.optimizer,
+                self.momentum
             )
             for client_id in sampled_client_ids
         ]
@@ -190,7 +216,7 @@ class Server:
 
     def run_federated_training(self):
         self.logger.info("Starting federated training.")
-        for epoch in range(1, self.global_epoch + 1):
+        for epoch in range(1, self.global_epochs + 1):
             self.logger.info(f"Global Epoch {epoch} started.")
             # Choose sampling method as needed (here we use sample_clients)
             sampled_client_ids, _ = self._sample_clients(self.sampled)
@@ -320,7 +346,7 @@ class AttackServer(Server):
     def run_federated_training(self):
         self.logger.info("Starting federated training with attacks.")
         self.epoch_results = []  
-        for epoch in range(1, self.global_epoch + 1):
+        for epoch in range(1, self.global_epochs + 1):
             self.logger.info(f"Global Epoch {epoch} started.")
             if self.aggregation_strategy in {AggregationStrategy.KeTS, AggregationStrategy.KeTSV2}:
                 sampled_client_ids , number_of_attackers_epoch = self._sample_from_weights(self.trust_scores, self.sampled)
@@ -524,7 +550,7 @@ class FLTrustServer(AttackServer):
     def run_federated_training(self):
         self.epoch_results = []  # new: initialize results list
         self.logger.info("Starting federated training with attacks.")
-        for epoch in range(1, self.global_epoch + 1):
+        for epoch in range(1, self.global_epochs + 1):
             self.logger.info(f"Global Epoch {epoch} started.")
             # FLTrust may use a different sampling method; here we use sample_clients
             sampled_client_ids, number_of_attackers_epoch = self._sample_clients(self.sampled)

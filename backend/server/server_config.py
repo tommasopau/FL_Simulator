@@ -9,14 +9,16 @@ from backend.aggregation_techniques.KeTSV2 import KeTSV2
 from backend.aggregation_techniques.krum import krum
 
 class AggregationStrategy(Enum):
-    FEDAVG = auto()
-    KRUM = auto()
-    MEDIAN = auto()
-    TRIM_MEAN = auto()
-    KeTS = auto()
-    FLTRUST = auto()
-    KeTSV2 = auto()
-    KeTS_MedTrim = auto()
+    FEDAVG = 'fedavg'
+    KRUM = 'krum'
+    MEDIAN =  'median'
+    TRIM_MEAN =  'trim_mean'
+    KeTS = 'KeTS'
+    FLTRUST =  'FLTrust'
+    KeTSV2 =  'KeTSV2'
+    KeTS_MedTrim =  'KeTS_MedTrim'
+
+
 
 aggregation_methods = {
     AggregationStrategy.FEDAVG: fedavg,
@@ -28,6 +30,8 @@ aggregation_methods = {
     AggregationStrategy.KeTSV2: KeTSV2,
     AggregationStrategy.KeTS_MedTrim: KeTS_MedTrim
 }
+    
+    
 
 from backend.attacks.gaussian import gaussian_attack
 from backend.attacks.label_flip import label_flip_attack
@@ -45,18 +49,18 @@ from backend.attacks.research_att import (
 )
 
 class AttackType(Enum):
-    NO_ATTACK = auto()
-    MIN_MAX = auto()
-    MIN_SUM = auto()
-    KRUM = auto()
-    TRIM = auto()
-    GAUSSIAN = auto()
-    LABEL_FLIP = auto()
-    MIN_MAX_V2 = auto()
-    MIN_SUM_V2 = auto()
-    SIGN_FLIP = auto()
-    MIN_MAX_V3 = auto()
-    MIN_SUM_V3 = auto()
+    NO_ATTACK = 'no_attack'
+    MIN_MAX = 'min_max'
+    MIN_SUM =  'min_sum'
+    KRUM = 'krum'
+    TRIM =  'trim'
+    GAUSSIAN = 'gaussian'
+    LABEL_FLIP = 'label_flip'
+    MIN_MAX_V2 = 'min_max_v2'
+    MIN_SUM_V2 = 'min_sum_v2'
+    SIGN_FLIP = 'sign_flip'
+    MIN_MAX_V3 = 'min_max_v3'
+    MIN_SUM_V3 =  'min_sum_v3'
 
 attacks = {
     AttackType.MIN_MAX: min_max_attack,

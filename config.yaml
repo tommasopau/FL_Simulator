@@ -1,17 +1,30 @@
-federated_learning:
-  aggregation_strategy: FEDAVG
-  alpha: 0.5
-  attack: MIN_MAX
-  batch_size: 64
-  dataset: mnist
-  global_epochs: 5
-  learning_rate: 0.001
-  local_DP_SGD: false
-  local_epochs: 4
-  num_attackers: 10
-  num_clients: 50
-  partition_type: iid
-  sampled_clients: 40
-  seed: 42
 model:
   type: FCMNIST
+
+dataset:
+  dataset: mnist
+  num_clients: 50
+  alpha: 0.5
+  batch_size: 64
+  partition_type: non_iid
+
+training:
+  global_epochs: 20
+  local_epochs: 3
+  learning_rate: 0.001
+  sampled_clients: 40
+  local_DP_SGD: false
+  fedprox: false
+  fedprox_mu: 0.01
+  optimizer: SGD
+  momentum: 0.9
+
+attack:
+  attack: min_max
+  num_attackers: 10
+
+system:
+  seed: 42
+
+aggregation:
+  aggregation_strategy: fedavg
