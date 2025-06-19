@@ -120,7 +120,10 @@ class Server:
         # Initialize aggregation method
         self.aggregation_method = aggregation_methods[aggregation_strategy]
         
-        
+        #additional methods kets etc
+        self.trust_scores = {1 for _ in range(self.num_clients)}
+        self.last_updates = {}
+        self.trust_scores2 = {1 for _ in range(self.num_clients)}
         
         self.logger = logging.getLogger(self.__class__.__name__)
         self.aggregation_kwargs = kwargs  
@@ -239,13 +242,14 @@ class Server:
 
         aggregation_kwargs = self.aggregation_kwargs.copy() # Copy to avoid modifying the original dict
         
-        if self.aggregation_strategy in {AggregationStrategy.KeTS, AggregationStrategy.KeTSV2}:
+        if self.aggregation_strategy in {AggregationStrategy.KeTS, AggregationStrategy.KeTSV2 ,  AggregationStrategy.KeTS_MedTrim, AggregationStrategy.Testing}:
             aggregation_kwargs.update({
             'trust_scores': self.trust_scores,
             'last_updates': self.last_updates,
             'baseline_decreased_score': 0.02,
             'last_global_update': self,
-            'trust_scores2': self.trust_scores2
+            'trust_scores2': self.trust_scores2,
+            'clusters': self.federated_data_loader.dataset_handler.clusters, #TESTING
             })
 
         

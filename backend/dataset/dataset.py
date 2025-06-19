@@ -16,6 +16,11 @@ from flwr_datasets.partitioner import DirichletPartitioner, IidPartitioner
 from datasets import load_dataset
 from .flwr_wrapper import CustomFederatedDataset
 
+##TESTINg
+from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
+from sklearn.metrics import silhouette_score, calinski_harabasz_score, davies_bouldin_score
+
+
 class AbstractDatasetHandler(ABC):
     def __init__(self, datasetID: str, num_clients: int, partition_type: str, alpha: float, seed: int = 33):
         self.datasetID = datasetID
@@ -28,6 +33,8 @@ class AbstractDatasetHandler(ABC):
         self.client_datasets = None
         self.label_flipping_attack = False
         self.num_attackers = 0
+        self.client_label_distributions = {}  #TESTING
+        self.clusters = {}
         self.logger = logging.getLogger(__name__)
         self.logger.info("DatasetHandler initialized.")
 
@@ -85,6 +92,15 @@ class DatasetHandler(AbstractDatasetHandler):
             attackers = [cid for cid in range(self.num_attackers)] #manual setting attackers to be updated
             self.attack_client_datasets_structured(attackers , 1.00 ) #experiment to perfrom label flipping attack
             
+        
+        self._calculate_label_distributions()
+        optimal_results = self.find_optimal_k_kmeans(max_k=8, plot=False)
+        print(f"Optimal K: {optimal_results['optimal_k']}")
+        clustering_results = self.perform_clustering_analysis(
+            methods=['kmeans', 'dbscan', 'hierarchical'], 
+            optimal_k=optimal_results['optimal_k'],
+            plot=False
+        )
         
         
         self._apply_transforms_to_clients()
@@ -169,6 +185,241 @@ class DatasetHandler(AbstractDatasetHandler):
             num_workers=0,
             pin_memory=True if self.device == 'cuda' else False
         )
+    ### TESTING METHODS ###
+    def _calculate_label_distributions(self):
+        """
+        Calculate the label distribution (percentages) for each client's dataset.
+        """
+        self.logger.info("Calculating label distributions for all clients.")
+        self.client_label_distributions = {}
+        
+        for client_id in range(self.num_clients):
+            client_dataset = self.client_datasets[client_id]
+            
+            # Extract labels based on dataset type
+            if hasattr(client_dataset, 'with_format'):
+                # For image datasets (HuggingFace datasets)
+                labels = [example['label'] for example in client_dataset]
+            else:
+                # For tabular datasets (TensorDataset)
+                labels = [int(client_dataset[i][1].item()) for i in range(len(client_dataset))]
+            
+            # Count labels
+            unique_labels, counts = np.unique(labels, return_counts=True)
+            total_samples = len(labels)
+            
+            # Calculate percentages
+            label_percentages = {}
+            for label, count in zip(unique_labels, counts):
+                label_percentages[int(label)] = (count / total_samples)
+            
+            self.client_label_distributions[client_id] = {
+                'percentages': label_percentages,
+            }
+            self.logger.info(f"Client {client_id} label distribution: {label_percentages}")
+        
+    def get_label_distribution_matrix(self) -> np.ndarray:
+        """
+        Convert client label distributions to a matrix for clustering.
+        
+        Returns:
+            np.ndarray: Matrix where each row represents a client and columns represent label percentages
+        """
+        if not self.client_label_distributions:
+            self.logger.warning("Label distributions not calculated. Run _calculate_label_distributions() first.")
+            return np.array([])
+        
+        # Get all unique labels across all clients
+        all_labels = set()
+        for client_dist in self.client_label_distributions.values():
+            all_labels.update(client_dist['percentages'].keys())
+        all_labels = sorted(list(all_labels))
+        
+        # Create matrix
+        matrix = []
+        for client_id in range(self.num_clients):
+            client_dist = self.client_label_distributions[client_id]['percentages']
+            row = [client_dist.get(label, 0.0) for label in all_labels]
+            matrix.append(row)
+        
+        return np.array(matrix)
+    def find_optimal_k_kmeans(self, max_k: int = 10, plot: bool = True) -> dict:
+        """
+        Find optimal number of clusters for K-means using silhouette score.
+        
+        Args:
+            max_k (int): Maximum number of clusters to test
+            plot (bool): Whether to plot the results
+            
+        Returns:
+            dict: Results containing optimal k, scores, and clustering results
+        """
+        self.logger.info("Finding optimal K for K-means clustering using silhouette score.")
+        
+        X = self.get_label_distribution_matrix()
+        if X.size == 0:
+            self.logger.error("No label distribution data available.")
+            return {}
+        
+        # Test different k values
+        k_range = range(2, min(max_k + 1, self.num_clients))
+        silhouette_scores = []
+        calinski_scores = []
+        davies_bouldin_scores = []
+        
+        results = {}
+        
+        for k in k_range:
+            kmeans = KMeans(n_clusters=k, random_state=self.seed, n_init=10)
+            cluster_labels = kmeans.fit_predict(X)
+            
+            # Calculate metrics
+            sil_score = silhouette_score(X, cluster_labels)
+            cal_score = calinski_harabasz_score(X, cluster_labels)
+            db_score = davies_bouldin_score(X, cluster_labels)
+            
+            silhouette_scores.append(sil_score)
+            calinski_scores.append(cal_score)
+            davies_bouldin_scores.append(db_score)
+            
+            results[k] = {
+                'silhouette_score': sil_score,
+                'calinski_harabasz_score': cal_score,
+                'davies_bouldin_score': db_score,
+                'cluster_labels': cluster_labels,
+                'kmeans_model': kmeans
+            }
+            
+            self.logger.info(f"K={k}: Silhouette={sil_score:.3f}, Calinski-Harabasz={cal_score:.3f}, Davies-Bouldin={db_score:.3f}")
+        
+        # Find optimal k based on silhouette score
+        optimal_k = k_range[np.argmax(silhouette_scores)]
+        
+        
+        
+        return {
+            'optimal_k': optimal_k,
+            'optimal_silhouette_score': max(silhouette_scores),
+            'all_results': results,
+            'feature_matrix': X
+        }
+    def perform_clustering_analysis(self, methods: list = ['kmeans', 'dbscan', 'hierarchical'], 
+                                  optimal_k: int = None, plot: bool = True, 
+                                  store_method: str = 'kmeans') -> dict:
+        """
+        Perform clustering analysis using multiple algorithms.
+        
+        Args:
+            methods (list): List of clustering methods to use
+            optimal_k (int): Number of clusters for methods that require it
+            plot (bool): Whether to plot results
+            store_method (str): Which clustering method results to store in self.clusters
+            
+        Returns:
+            dict: Clustering results for all methods
+        """
+        self.logger.info(f"Performing clustering analysis using methods: {methods}")
+        
+        X = self.get_label_distribution_matrix()
+        if X.size == 0:
+            self.logger.error("No label distribution data available.")
+            return {}
+        
+        results = {}
+        
+        # Determine optimal k if not provided
+        if optimal_k is None and 'kmeans' in methods:
+            kmeans_results = self.find_optimal_k_kmeans(plot=False)
+            optimal_k = kmeans_results.get('optimal_k', 3)
+        
+        # K-Means
+        if 'kmeans' in methods:
+            kmeans = KMeans(n_clusters=optimal_k, random_state=self.seed, n_init=10)
+            kmeans_labels = kmeans.fit_predict(X)
+            results['kmeans'] = {
+                'labels': kmeans_labels,
+                'model': kmeans,
+                'silhouette_score': silhouette_score(X, kmeans_labels),
+                'n_clusters': optimal_k
+            }
+        
+        # DBSCAN
+        if 'dbscan' in methods:
+            # Try different eps values to find reasonable clustering
+            best_dbscan = None
+            best_score = -1
+            best_eps = 0.1
+            
+            for eps in [0.05, 0.1, 0.15, 0.2, 0.25, 0.3]:
+                dbscan = DBSCAN(eps=eps, min_samples=2)
+                dbscan_labels = dbscan.fit_predict(X)
+                
+                if len(set(dbscan_labels)) > 1 and -1 not in dbscan_labels:  # Valid clustering
+                    score = silhouette_score(X, dbscan_labels)
+                    if score > best_score:
+                        best_score = score
+                        best_dbscan = dbscan
+                        best_eps = eps
+            
+            if best_dbscan is not None:
+                dbscan_labels = best_dbscan.fit_predict(X)
+                results['dbscan'] = {
+                    'labels': dbscan_labels,
+                    'model': best_dbscan,
+                    'silhouette_score': best_score,
+                    'n_clusters': len(set(dbscan_labels)),
+                    'eps': best_eps
+                }
+            else:
+                self.logger.warning("DBSCAN could not find valid clustering with tested parameters.")
+        
+        # Hierarchical/Agglomerative Clustering
+        if 'hierarchical' in methods:
+            hierarchical = AgglomerativeClustering(n_clusters=optimal_k)
+            hierarchical_labels = hierarchical.fit_predict(X)
+            results['hierarchical'] = {
+                'labels': hierarchical_labels,
+                'model': hierarchical,
+                'silhouette_score': silhouette_score(X, hierarchical_labels),
+                'n_clusters': optimal_k
+            }
+        
+        # Store the selected clustering method results
+        if store_method in results:
+            self.cluster_method = store_method
+            labels = results[store_method]['labels']
+            self.clusters = {client_id: int(labels[client_id]) for client_id in range(self.num_clients)}
+            self.logger.info(f"Stored {store_method} clustering results. Clusters: {self.clusters}")
+        else:
+            self.logger.warning(f"Store method '{store_method}' not found in results. Clusters not stored.")
+        
+        # Print summary
+        self._print_clustering_summary(results)
+        
+        return results
+    def _print_clustering_summary(self, results):
+        """Print summary of clustering results."""
+        print("\n" + "="*50)
+        print("CLUSTERING ANALYSIS SUMMARY")
+        print("="*50)
+        
+        for method, result in results.items():
+            print(f"\n{method.upper()}:")
+            print(f"  Number of clusters: {result['n_clusters']}")
+            print(f"  Silhouette score: {result['silhouette_score']:.3f}")
+            
+            # Show cluster composition
+            unique_labels, counts = np.unique(result['labels'], return_counts=True)
+            print(f"  Cluster sizes: {dict(zip(unique_labels, counts))}")
+            
+            # Show which clients are in each cluster
+            print("  Client assignments:")
+            for cluster_id in unique_labels:
+                if cluster_id != -1:  # Skip noise points in DBSCAN
+                    clients_in_cluster = [i for i, label in enumerate(result['labels']) if label == cluster_id]
+                    print(f"    Cluster {cluster_id}: {clients_in_cluster}")
+    
+    
 
 
 

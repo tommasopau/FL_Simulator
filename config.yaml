@@ -21,10 +21,10 @@ training:
 
 attack:
   attack: min_max
-  num_attackers: 10
+  num_attackers: 12
 
 system:
   seed: 42
 
 aggregation:
-  aggregation_strategy: fedavg
+  aggregation_strategy: testing

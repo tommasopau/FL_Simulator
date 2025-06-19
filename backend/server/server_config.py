@@ -7,6 +7,7 @@ from backend.aggregation_techniques.KeTS import KeTS
 from backend.aggregation_techniques.KeTS_MedTrim import KeTS_MedTrim
 from backend.aggregation_techniques.KeTSV2 import KeTSV2
 from backend.aggregation_techniques.krum import krum
+from backend.aggregation_techniques.testing import  cluster_similarity_fedavg
 
 class AggregationStrategy(Enum):
     FEDAVG = 'fedavg'
@@ -17,6 +18,7 @@ class AggregationStrategy(Enum):
     FLTRUST =  'FLTrust'
     KeTSV2 =  'KeTSV2'
     KeTS_MedTrim =  'KeTS_MedTrim'
+    Testing = 'testing'
 
 
 
@@ -28,7 +30,8 @@ aggregation_methods = {
     AggregationStrategy.KeTS: KeTS,
     AggregationStrategy.FLTRUST: None,
     AggregationStrategy.KeTSV2: KeTSV2,
-    AggregationStrategy.KeTS_MedTrim: KeTS_MedTrim
+    AggregationStrategy.KeTS_MedTrim: KeTS_MedTrim,
+    AggregationStrategy.Testing: cluster_similarity_fedavg
 }
     
     

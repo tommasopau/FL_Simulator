@@ -5,6 +5,8 @@ results.txt
 backend/attacks/research_att.py
 simulation_epoch_results.txt
 backend/attacks/attacks.py
+backend/aggregation/aggregation.py
+backend/aggregation/testing.py
 .env/
 __pycache__/
 *.pyc
