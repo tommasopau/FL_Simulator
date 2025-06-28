@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from typing import List, Dict, Optional, Tuple, Callable
+from typing import List, Dict, Tuple
 import logging
 
 
@@ -36,7 +36,6 @@ def fedavg(
     """
     logger.info("Aggregating gradients using FedAvg.")
     
-    n = len(gradients)
     total_data_size = sum([gradient[1]['data_size'] for gradient in gradients])
     with torch.no_grad():
           # compute global model update

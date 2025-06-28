@@ -240,28 +240,22 @@ class Server:
         """
         self.logger.info("Aggregating client updates.")
 
-        aggregation_kwargs = self.aggregation_kwargs.copy() # Copy to avoid modifying the original dict
-        
-        if self.aggregation_strategy in {AggregationStrategy.KeTS, AggregationStrategy.KeTSV2 ,  AggregationStrategy.KeTS_MedTrim, AggregationStrategy.Testing}:
-            aggregation_kwargs.update({
-            'trust_scores': self.trust_scores,
-            'last_updates': self.last_updates,
+        aggregation_kwargs = {
+            'gradients': gradients,
+            'net': self.global_model,
+            'lr': self.learning_rate,
+            'f': self.f,
+            'device': torch.device(self.device),
+            'trust_scores': getattr(self, 'trust_scores', None),
+            'last_updates': getattr(self, 'last_updates', None),
+            'trust_scores2': getattr(self, 'trust_scores2', None),
             'baseline_decreased_score': 0.02,
             'last_global_update': self,
-            'trust_scores2': self.trust_scores2,
-            'clusters': self.federated_data_loader.dataset_handler.clusters, #TESTING
-            })
-
+            'clusters': getattr(self.federated_data_loader.dataset_handler, 'clusters', None),
+        }
         
         try:
-            self.aggregation_method(
-                gradients=gradients,
-                net=self.global_model,
-                lr=self.learning_rate,
-                f=self.f,
-                device=torch.device(self.device),
-                **aggregation_kwargs  # data_sizes included conditionally
-            )
+            self.aggregation_method(**aggregation_kwargs)
             self.logger.info("Client updates aggregated successfully.")
         except Exception as e:
             self.logger.error(f"Aggregation failed: {e}")

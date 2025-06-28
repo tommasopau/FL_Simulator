@@ -4,12 +4,6 @@ from typing import List, Dict, Optional, Tuple, Callable
 import logging
 from backend.aggregation_techniques.aggregation import update_global_model
 
-    
-
-
-
-
-
 logger = logging.getLogger(__name__)
 
 def krum(
@@ -21,15 +15,19 @@ def krum(
     **kwargs
 ) -> None:
     """
-    Krum aggregation method.
+    Perform Krum aggregation on client gradients.
 
-    Based on the description in https://papers.nips.cc/paper/2017/hash/f4b9ec30ad9f68f89b29639786cb62ef-Abstract.html
+    This method selects a gradient that minimizes the sum of Euclidean distances 
+    to its closest (n - f - 1) neighbors, where n is the number of clients and f is 
+    the number of malicious clients. The chosen gradient is then used to update 
+    the global model.
 
     Args:
-        gradients (List[torch.Tensor]): List of gradients from the clients.
+        gradients (List[Tuple[int, Dict[str, torch.Tensor]]]): List of tuples 
+            containing each client identifier and its gradient dictionary.
         net (nn.Module): The global model to be updated.
         lr (float): Learning rate (unused in Krum but kept for compatibility).
-        f (int): Number of malicious clients. The first f clients are malicious.
+        f (int): Number of malicious clients.
         device (torch.device): Computation device.
         **kwargs: Additional keyword arguments.
     """
@@ -38,14 +36,14 @@ def krum(
 
     gradients = [gradient[1]['flattened_diffs'] for gradient in gradients]
 
-    # compute pairwise Euclidean distance
+    # Compute pairwise Euclidean distances
     dist = torch.zeros((n, n)).to(device)
     for i in range(n):
         for j in range(i + 1, n):
             d = torch.norm(gradients[i] - gradients[j])
             dist[i, j], dist[j, i] = d, d
 
-    # sort distances and get model with smallest sum of distances to closest n-f-2 models
+    # Sort distances and select the gradient with the smallest sum of distances to its closest (n - f - 1) neighbors
     sorted_dist, _ = torch.sort(dist, dim=-1)
     global_update = gradients[torch.argmin(torch.sum(sorted_dist[:, 0:(n - f - 1)], dim=-1))]
     

@@ -8,12 +8,8 @@
 ![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=flat&logo=streamlit&logoColor=white)
 ![Flask](https://img.shields.io/badge/flask-%23000.svg?style=flat&logo=flask&logoColor=white)
 ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)
-![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-D71F00?style=flat&logo=sqlalchemy&logoColor=white)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-*A comprehensive federated learning simulation platform for research and experimentation*
-
-
+**A cutting-edge federated learning simulation platform for academic research**
 
 </div>
 
@@ -82,7 +78,7 @@ FL Simulator is a cutting-edge federated learning simulation platform designed f
 
 1. **Clone the Repository**
    ```bash
-   git clone <repository_url>
+   git clone https://github.com/yourusername/FL_Simulator.git
    cd FL_Simulator
    ```
 
@@ -102,20 +98,30 @@ FL Simulator is a cutting-edge federated learning simulation platform designed f
    pip install -r requirements.txt
    ```
 
-### 🏃‍♂️ Running Locally
-
-1. **Start the Backend**
+4. **Environment Setup**
    ```bash
-   python backend/main_bp.py
+   # Copy example environment file
+   cp .env.example .env
+   
+   # Edit .env file if needed (optional for local SQLite)
    ```
 
-2. **Launch the Frontend**
+### 🏃‍♂️ Running Locally
+
+1. **Start the Backend Server**
+   ```bash
+   cd backend
+   python main_bp.py
+   ```
+
+2. **Launch the Streamlit Frontend** (in a new terminal)
    ```bash
    streamlit run streamlit_app.py
    ```
 
 3. **Access the Application**
    - Open your browser and navigate to `http://localhost:8501`
+   - The backend API runs on `http://localhost:8000`
 
 ### 🐳 Docker Deployment
 

@@ -10,14 +10,14 @@ def sign_flip_attack(
     device: torch.device
 ) -> List[torch.Tensor]:
     """
-    An attack that flips the sign of the updates for the malicious clients.
+    Performs an attack that flips the sign of the updates for the malicious clients.
 
     Args:
-        v (List[torch.Tensor]): List of gradients.
+        v (List[torch.Tensor]): List of client gradients.
         lr (float): Learning rate (unused).
-        f (int): Number of malicious clients (unused, kept for consistency).
+        f (int): Number of malicious clients (unused, kept for compatibility).
         num_attackers_epoch (int): Number of malicious updates to flip.
-        device (torch.device): Device used in training.
+        device (torch.device): Computation device used during training.
 
     Returns:
         List[torch.Tensor]: List of gradients with sign-flipped updates for the malicious clients.

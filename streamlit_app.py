@@ -5,6 +5,9 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+import os
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+
 
 # Sidebar Navigation: Two pages now.
 st.sidebar.title("Navigation")
@@ -109,7 +112,7 @@ if page == "Run Simulation":
                 st.json(config)
             
             try:
-                sim_response = requests.post("http://localhost:8000/simulation", json=config)
+                sim_response = requests.post(f"{BACKEND_URL}/simulation", json=config)
                 if sim_response.status_code == 200:
                     st.balloons()
                     data = sim_response.json()
@@ -202,7 +205,7 @@ elif page == "Execute Query":
         if filters:
             payload = {"filters": filters}
             try:
-                response = requests.post('http://localhost:8000/query', json=payload)
+                response = requests.post(f"{BACKEND_URL}/simulation", json=payload)
                 if response.status_code == 200:
                     result = response.json().get('result', [])
                     if result:
