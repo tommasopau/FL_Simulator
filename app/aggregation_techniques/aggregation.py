@@ -6,15 +6,8 @@ import torch.nn.functional as F
 
 import numpy as np
 
-from backend.utils.utility import segmentation
+from app.utils.utility import segmentation
 from collections import defaultdict
-
-
-
-    
-
-
-
 
 
 logger = logging.getLogger(__name__)
@@ -33,8 +26,8 @@ def update_global_model(net: nn.Module, global_update: torch.Tensor, device: tor
         idx = 0
         for param in net.parameters():
             param_length = param.numel()
-            param_update = global_update[idx:idx + param_length].reshape(param.size()).to(device)
+            param_update = global_update[idx:idx +
+                                         param_length].reshape(param.size()).to(device)
             param.add_(param_update)
             idx += param_length
     logger.info("Global model parameters updated.")
-

@@ -4,11 +4,12 @@ from typing import List, Dict, Tuple
 import logging
 import torch.nn.functional as F
 import numpy as np
-from backend.utils.utility import segmentation
-from backend.aggregation_techniques.fedavg import fedavg
+from app.utils.utility import segmentation
+from app.aggregation_techniques.fedavg import fedavg
 
 
 logger = logging.getLogger(__name__)
+
 
 def KeTS(
     gradients: List[Tuple[int, Dict[str, torch.Tensor]]],
@@ -46,28 +47,30 @@ def KeTS(
     # Update trust scores for sampled clients
     if all(update is None for update in last_updates.values()):
         fedavg(gradients, net, lr, f, device, **kwargs)
-        return 
+        return
     for cid, gradient in gradients:
         if last_updates[cid] is not None:
             flat_update1 = gradient['flattened_diffs'].view(-1)
             flat_update2 = last_updates[cid].view(-1)
-            
+
             # Compute cosine similarity
             sim = F.cosine_similarity(flat_update1, flat_update2, dim=0).item()
             # Compute Euclidean distance
             dist = torch.norm(flat_update1 - flat_update2).item()
             if sim >= 0:
                 alpha = (1 - sim) + dist
-                trust_scores[cid] = max(0, trust_scores[cid] - baseline_decreased_score * alpha)
+                trust_scores[cid] = max(
+                    0, trust_scores[cid] - baseline_decreased_score * alpha)
             else:
                 trust_scores[cid] = 0
     logger.info(f"Updated trust scores: {trust_scores}")
-            
-    trust_scores_sampled = np.array([trust_scores[cid] for cid, _ in gradients])
+
+    trust_scores_sampled = np.array(
+        [trust_scores[cid] for cid, _ in gradients])
     last_segment = segmentation(trust_scores_sampled, 'gaussian')
-    
-    honest_updates = [(cid, gradient) for cid, gradient in gradients if trust_scores[cid] >= last_segment]
-    logger.info(f"Attacker clients: {[cid for cid, _ in gradients if trust_scores[cid] < last_segment]}")
+
+    honest_updates = [(cid, gradient) for cid,
+                      gradient in gradients if trust_scores[cid] >= last_segment]
+    logger.info(
+        f"Attacker clients: {[cid for cid, _ in gradients if trust_scores[cid] < last_segment]}")
     fedavg(honest_updates, net, lr, f, device, **kwargs)
-
-

@@ -3,9 +3,10 @@ from torch import nn
 from typing import List, Dict, Optional, Tuple, Callable
 import logging
 
-from backend.aggregation_techniques.aggregation import update_global_model
+from app.aggregation_techniques.aggregation import update_global_model
 
 logger = logging.getLogger(__name__)
+
 
 def trim_mean(
     gradients: List[Tuple[int, Dict[str, torch.Tensor]]],
@@ -33,13 +34,17 @@ def trim_mean(
     """
     gradients = [gradient[1]['flattened_diffs'] for gradient in gradients]
     n = len(gradients)
-    logger.info(f"Aggregating gradients using Trim Mean with {f} malicious clients.")
+    logger.info(
+        f"Aggregating gradients using Trim Mean with {f} malicious clients.")
 
     if n <= 2 * f:
-        logger.error("Number of clients must be greater than 2f for Trim Mean aggregation.")
-        raise ValueError("Insufficient number of clients for Trim Mean aggregation.")
+        logger.error(
+            "Number of clients must be greater than 2f for Trim Mean aggregation.")
+        raise ValueError(
+            "Insufficient number of clients for Trim Mean aggregation.")
 
-    sorted_grads, _ = torch.sort(torch.cat(gradients, dim=1).to(device), dim=-1)
+    sorted_grads, _ = torch.sort(
+        torch.cat(gradients, dim=1).to(device), dim=-1)
     global_update = torch.mean(sorted_grads[:, f:(n - f)], dim=-1)
 
     # Update the global model

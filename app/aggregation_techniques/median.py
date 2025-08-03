@@ -3,9 +3,10 @@ from torch import nn
 from typing import List, Dict,  Tuple
 import logging
 
-from backend.aggregation_techniques.aggregation import update_global_model
+from app.aggregation_techniques.aggregation import update_global_model
 
 logger = logging.getLogger(__name__)
+
 
 def median_aggregation(
     gradients: List[Tuple[int, Dict[str, torch.Tensor]]],
