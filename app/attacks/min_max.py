@@ -1,6 +1,7 @@
-import torch 
+import torch
 import numpy as np
 from typing import List
+
 
 def min_max_attack(
     v: List[torch.Tensor],
@@ -33,28 +34,31 @@ def min_max_attack(
     catv = torch.cat(v, dim=1)
     grad_mean = torch.mean(catv, dim=1)
     if dev_type == 'unit_vec':
-        deviation = grad_mean / torch.norm(grad_mean, p=2)  # Unit vector (opposite to clean direction)
+        # Unit vector (opposite to clean direction)
+        deviation = grad_mean / torch.norm(grad_mean, p=2)
     elif dev_type == 'sign':
         deviation = torch.sign(grad_mean)  # Sign of the gradients
     elif dev_type == 'std':
         deviation = torch.std(catv, dim=1)  # Standard deviation
     else:
-        raise ValueError("Invalid dev_type. Choose from 'unit_vec', 'sign', or 'std'.")
-    
+        raise ValueError(
+            "Invalid dev_type. Choose from 'unit_vec', 'sign', or 'std'.")
+
     gamma = torch.tensor([50.0]).float().to(device)
     threshold_diff = 1e-5
     gamma_fail = gamma
     gamma_succ = 0
 
-    distances = []
+    distances = None  # Initialize with None instead of empty list
     for update in v:
         distance = torch.norm(catv - update, dim=1, p=2) ** 2
-        if not distances:
+        if distances is None:  # Check if None instead of using "not"
             distances = distance[None, :]
         else:
             distances = torch.cat((distances, distance[None, :]), 0)
 
-    max_distance = torch.max(distances)  # Maximum distance among benign updates.
+    # Maximum distance among benign updates.
+    max_distance = torch.max(distances)
     del distances
 
     # Finding optimal gamma using an iterative approach.

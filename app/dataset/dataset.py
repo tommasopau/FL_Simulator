@@ -91,7 +91,7 @@ class DatasetHandler(AbstractDatasetHandler):
             attackers = [cid for cid in range(self.num_attackers)]
             # experiment to perfrom label flipping attack
             self.attack_client_datasets_structured(attackers, 1.00)
-
+        '''
         self._calculate_label_distributions()
         optimal_results = self.find_optimal_k_kmeans(max_k=8, plot=False)
         print(f"Optimal K: {optimal_results['optimal_k']}")
@@ -100,6 +100,7 @@ class DatasetHandler(AbstractDatasetHandler):
             optimal_k=optimal_results['optimal_k'],
             plot=False
         )
+        '''
 
         self._apply_transforms_to_clients()
 

@@ -1,8 +1,8 @@
 model:
-  type: FCMNIST
+  type: ZalandoCNN
 
 dataset:
-  dataset: mnist
+  dataset: fashion_mnist
   num_clients: 50
   alpha: 0.5
   batch_size: 64
@@ -27,4 +27,4 @@ system:
   seed: 42
 
 aggregation:
-  aggregation_strategy: testing
+  aggregation_strategy: KeTS
