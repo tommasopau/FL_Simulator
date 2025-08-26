@@ -130,8 +130,49 @@ FL Simulator is a cutting-edge federated learning simulation platform designed f
    ```
 
 3. **Access the Application**
+
    - Open your browser and navigate to `http://localhost:8501`
    - The backend API runs on `http://localhost:8000`
+
+4. **Run Simulations Directly**  
+   For a faster and more flexible way to run simulations, you can directly execute the `simulationResearch.py` script. This approach allows you to bypass the full frontend/backend setup.
+
+   - **Edit the Configuration File**: Update the `config.yaml` file with your desired parameters, such as model type, dataset, training settings, attack type, and aggregation strategy. Example:
+
+     ```yaml
+     model:
+       type: ZalandoCNN
+
+     dataset:
+       dataset: fashion_mnist
+       num_clients: 50
+       alpha: 0.5
+       batch_size: 64
+       partition_type: non_iid
+
+     training:
+       global_epochs: 20
+       local_epochs: 3
+       learning_rate: 0.001
+       sampled_clients: 40
+
+     attack:
+       attack: min_max
+       num_attackers: 12
+
+     aggregation:
+       aggregation_strategy: KeTS
+     ```
+
+   - **Run the Script**: Execute the simulation with:
+
+     ```bash
+     python simulationResearch.py
+     ```
+
+   - **View Results**: The results, including final accuracy and configuration details, will be appended to `results.txt` in the project directory.
+
+   This method is ideal for researchers who want quick iterations and direct control over the simulation logic.
 
 ### 🐳 Docker Deployment
 
@@ -228,82 +269,3 @@ _FL Simulator - Empowering federated learning research through advanced simulati
 ![Open Source](https://img.shields.io/badge/Open%20Source-❤️-brightgreen.svg)
 
 </div>
-
-## 🧪 Running Simulations for Research
-
-For researchers who need a faster and more flexible way to run simulations, you can directly execute the `simulationResearch.py` file. This approach allows you to quickly modify the simulation logic and parameters without relying on the full frontend/backend setup.
-
-### Steps to Run Simulations
-
-1. **Edit the Configuration File**  
-   Update the `config.yaml` file to set the desired parameters for your simulation, such as:
-
-   - Model type
-   - Dataset and partitioning strategy
-   - Training parameters (e.g., global/local epochs, learning rate)
-   - Attack type and number of attackers
-   - Aggregation strategy
-
-   Example:
-
-   ```yaml
-   model:
-     type: ZalandoCNN
-
-   dataset:
-     dataset: fashion_mnist
-     num_clients: 50
-     alpha: 0.5
-     batch_size: 64
-     partition_type: non_iid
-
-   training:
-     global_epochs: 20
-     local_epochs: 3
-     learning_rate: 0.001
-     sampled_clients: 40
-     local_DP_SGD: false
-     fedprox: false
-     fedprox_mu: 0.01
-     optimizer: SGD
-     momentum: 0.9
-
-   attack:
-     attack: min_max
-     num_attackers: 12
-
-   system:
-     seed: 42
-
-   aggregation:
-     aggregation_strategy: KeTS
-   ```
-
-2. **Run the Simulation Script**  
-   Execute the `simulationResearch.py` file directly from the terminal:
-
-   ```bash
-   python simulationResearch.py
-   ```
-
-3. **View Results**
-
-   - The simulation results, including the final accuracy and configuration details, will be saved to `results.txt` in the project directory.
-   - If epoch-wise results are available, they will be saved to `simulation_epoch_results.txt`.
-
-4. **Modify the Script for Custom Logic**  
-   If needed, you can directly modify the `simulationResearch.py` file to implement custom logic, such as:
-
-   - Adding new attack or defense mechanisms
-   - Logging additional metrics
-   - Changing the dataset or model dynamically
-
-   Example: To log client-specific metrics, you can extend the `get_client_class_counts` function or add custom logging within the `main()` function.
-
-### Why Use This Approach?
-
-- **Faster Iterations**: No need to start the backend or frontend services.
-- **Research Flexibility**: Easily modify the script to test new ideas or configurations.
-- **Direct Control**: Full access to the simulation logic and parameters.
-
-This method is ideal for researchers who want to focus on experimentation and development without the overhead of the full application stack.

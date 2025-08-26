@@ -156,13 +156,14 @@ def KeTSV2(
         trust_scores2 (Dict[int, float]): Secondary trust scores for further filtering.
         last_updates (Dict[int, torch.Tensor]): Last updates received from each client.
         baseline_decreased_score (float): Factor used to decrease trust scores.
-        **kwargs: Additional keyword arguments; may include 'last_global_update'.
+        **kwargs: Additional keyword arguments; may include 'server'.
     """
     logger.info("Aggregating gradients using KeTSV2.")
-    server = kwargs.get('last_global_update', None)
+    server = kwargs.get('server', None)
 
     # Phase 1: First round using median aggregator when all last_updates are None.
     if all(update is None for update in last_updates.values()):
+        '''
         colluding_scores = detect_colluding_gradients(gradients)
         logger.info(f"Colluding scores: {colluding_scores}")
 
@@ -172,13 +173,15 @@ def KeTSV2(
             logger.warning(
                 "All clients detected as colluding. Falling back to aggregating all gradients.")
             non_colluding_gradients = gradients
-
+        '''
+        non_colluding_gradients = gradients
         grads = [grad['flattened_diffs']
                  for _, grad in non_colluding_gradients]
         stacked = torch.stack(grads, dim=0)
         global_update, _ = torch.median(stacked, dim=0)
         update_global_model(net, global_update, device)
-        server.last_global_update = global_update
+        if server is not None:
+            server.last_global_update = global_update
         return
 
     # Phase 2: Subsequent rounds using FedAvg with trust score updates.

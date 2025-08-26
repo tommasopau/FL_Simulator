@@ -30,6 +30,7 @@ def train_client(client_id, client_loader, global_model, local_epochs, learning_
     '''
     if fedprox:
         client = FedProxClient(client_id, client_loader, dp, fedprox_mu)
+
     else:
         client = Client(client_id, client_loader, dp)
     return client.train(
@@ -252,7 +253,7 @@ class Server:
             'last_updates': getattr(self, 'last_updates', None),
             'trust_scores2': getattr(self, 'trust_scores2', None),
             'baseline_decreased_score': 0.02,
-            'last_global_update': self,
+            'server': self,
             'clusters': getattr(self.federated_data_loader.dataset_handler, 'clusters', None),
         }
 
@@ -335,9 +336,8 @@ class AttackServer(Server):
         if self.aggregation_strategy in {AggregationStrategy.KeTS, AggregationStrategy.KeTSV2}:
             self.trust_scores = {cid: 1.0 for cid in range(self.num_clients)}
             self.last_updates = {cid: None for cid in range(self.num_clients)}
-            self.last_global_update = None
-
             self.trust_scores2 = {cid: 1.0 for cid in range(self.num_clients)}
+        self.last_global_update = None
 
     def _compute_attack(self, updates, lr, num_attackers_epoch, f):
         self.logger.info(f"{self.attack_method.__name__} attack computed.")

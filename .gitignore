@@ -1,8 +1,6 @@
 .conda/
 simulation.db
-simulationResearch.py
 results.txt
-config.yaml
 backend/attacks/research_att.py
 simulation_epoch_results.txt
 backend/attacks/attacks.py
