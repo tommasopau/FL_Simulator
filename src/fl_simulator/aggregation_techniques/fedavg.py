@@ -4,7 +4,7 @@ from typing import List, Dict, Tuple
 import logging
 
 
-from app.aggregation_techniques.aggregation import update_global_model
+from fl_simulator.aggregation_techniques.aggregation import update_global_model
 
 logger = logging.getLogger(__name__)
 

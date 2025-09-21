@@ -1,27 +1,27 @@
-from app.attacks.research_att import (
+from fl_simulator.attacks.research_att import (
     min_max_attack_rand_noise,
     min_sum_attack_rand_noise,
     min_max_attack_ortho,
     min_sum_attack_ortho
 )
-from app.attacks.krum_att import krum_attack
-from app.attacks.no_att import no_attack
-from app.attacks.trim_att import trim_attack
-from app.attacks.sign_flip import sign_flip_attack
-from app.attacks.min_sum import min_sum_attack
-from app.attacks.min_max import min_max_attack
-from app.attacks.label_flip import label_flip_attack
-from app.attacks.gaussian import gaussian_attack
+from fl_simulator.attacks.krum_att import krum_attack
+from fl_simulator.attacks.no_att import no_attack
+from fl_simulator.attacks.trim_att import trim_attack
+from fl_simulator.attacks.sign_flip import sign_flip_attack
+from fl_simulator.attacks.min_sum import min_sum_attack
+from fl_simulator.attacks.min_max import min_max_attack
+from fl_simulator.attacks.label_flip import label_flip_attack
+from fl_simulator.attacks.gaussian import gaussian_attack
 from enum import Enum, auto
 
-from app.aggregation_techniques.fedavg import fedavg
-from app.aggregation_techniques.median import median_aggregation
-from app.aggregation_techniques.trim import trim_mean
-from app.aggregation_techniques.KeTS import KeTS
-from app.aggregation_techniques.KeTS_MedTrim import KeTS_MedTrim
-from app.aggregation_techniques.KeTSV2 import KeTSV2
-from app.aggregation_techniques.krum import krum
-from app.aggregation_techniques.testing import cluster_similarity_fedavg
+from fl_simulator.aggregation_techniques.fedavg import fedavg
+from fl_simulator.aggregation_techniques.median import median_aggregation
+from fl_simulator.aggregation_techniques.trim import trim_mean
+from fl_simulator.aggregation_techniques.KeTS import KeTS
+from fl_simulator.aggregation_techniques.KeTS_MedTrim import KeTS_MedTrim
+from fl_simulator.aggregation_techniques.KeTSV2 import KeTSV2
+from fl_simulator.aggregation_techniques.krum import krum
+from fl_simulator.aggregation_techniques.testing import cluster_similarity_fedavg
 
 
 class AggregationStrategy(Enum):

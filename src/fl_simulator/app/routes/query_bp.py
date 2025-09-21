@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 import logging
-from app.app.services.query_services import filter_query
+from fl_simulator.app.services.query_services import filter_query
 
 query_bp = Blueprint('query_bp', __name__)
 

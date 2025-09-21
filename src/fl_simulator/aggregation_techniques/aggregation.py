@@ -6,7 +6,7 @@ import torch.nn.functional as F
 
 import numpy as np
 
-from app.utils.utility import segmentation
+from fl_simulator.utils.utility import segmentation
 from collections import defaultdict
 
 

@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 import ray
-from app.app.services.simulation_services import (
+from fl_simulator.app.services.simulation_services import (
     create_simulation_from_dict
 )
 from pydantic import ValidationError

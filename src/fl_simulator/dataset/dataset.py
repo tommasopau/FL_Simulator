@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from app.utils.constants import NORMALIZATION_PARAMS, TARGET_LABELS
+from fl_simulator.utils.constants import NORMALIZATION_PARAMS, TARGET_LABELS
 import pandas as pd
 import random
 import torch

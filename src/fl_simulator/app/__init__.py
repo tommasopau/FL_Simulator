@@ -1,7 +1,7 @@
 import os
 from flask import Flask
-from app.utils.logger import setup_logger
-from app.db import db  # Flask‑SQLAlchemy instance
+from fl_simulator.utils.logger import setup_logger
+from fl_simulator.db import db  # Flask‑SQLAlchemy instance
 from .routes.simulation_bp import sim_bp
 from .routes.query_bp import query_bp
 

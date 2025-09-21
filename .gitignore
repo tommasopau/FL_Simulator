@@ -1,11 +1,11 @@
 .conda/
 simulation.db
 results.txt
-backend/attacks/research_att.py
+src/fl_simulator/attacks/research_att.py
 simulation_epoch_results.txt
-backend/attacks/attacks.py
-backend/aggregation/aggregation.py
-backend/aggregation/testing.py
+src/fl_simulator/attacks/attacks.py
+src/fl_simulator/aggregation/aggregation.py
+src/fl_simulator/aggregation/testing.py
 .env/
 __pycache__/
 *.pyc

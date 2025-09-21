@@ -1,10 +1,10 @@
 import collections
-from app.utils.constants import MODEL_MAPPING
-from app.server.server import AttackServer, FLTrustServer, AggregationStrategy, AttackType
-from app.dataset.dataset import FederatedDataLoader, DatasetHandler, DatasetHandlerTab
-from app.utils.config import load_config, serialize_config, validate_config
-from app.utils.logger import setup_logger
-from app.utils.seeding import set_deterministic_mode
+from fl_simulator.utils.constants import MODEL_MAPPING
+from fl_simulator.server.server import AttackServer, FLTrustServer, AggregationStrategy, AttackType
+from fl_simulator.dataset.dataset import FederatedDataLoader, DatasetHandler, DatasetHandlerTab
+from fl_simulator.utils.config import load_config, serialize_config, validate_config
+from fl_simulator.utils.logger import setup_logger
+from fl_simulator.utils.seeding import set_deterministic_mode
 import torch
 import logging
 import json

@@ -8,9 +8,9 @@ import logging
 import random
 import copy
 import ray
-from app.server.server_config import AggregationStrategy, aggregation_methods, AttackType, attacks
-from app.dataset.dataset import FederatedDataLoader
-from app.client import Client, FedProxClient
+from fl_simulator.server.server_config import AggregationStrategy, aggregation_methods, AttackType, attacks
+from fl_simulator.dataset.dataset import FederatedDataLoader
+from fl_simulator.client import Client, FedProxClient
 
 
 @ray.remote

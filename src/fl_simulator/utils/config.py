@@ -3,7 +3,7 @@ from typing import Dict, Any
 import logging
 from enum import Enum
 import json
-from app.server.server import AttackType, AggregationStrategy
+from fl_simulator.server.server import AttackType, AggregationStrategy
 
 logger = logging.getLogger(__name__)
 

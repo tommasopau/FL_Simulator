@@ -3,17 +3,15 @@ from torch import nn
 from typing import List, Dict, Tuple
 import logging
 import torch.nn.functional as F
-
 import numpy as np
+from fl_simulator.utils.utility import segmentation
+from fl_simulator.aggregation_techniques.fedavg import fedavg
 
-from app.utils.utility import segmentation
-from app.aggregation_techniques.median import median_aggregation
-from app.aggregation_techniques.trim import trim_mean
 
 logger = logging.getLogger(__name__)
 
 
-def KeTS_MedTrim(
+def KeTS(
     gradients: List[Tuple[int, Dict[str, torch.Tensor]]],
     net: nn.Module,
     lr: float,
@@ -25,16 +23,16 @@ def KeTS_MedTrim(
     **kwargs
 ) -> None:
     """
-    Aggregates client gradients using a combination of the KeTS method with Median or Trimmed Mean aggregation.
+    Aggregates client gradients using the KeTS method.
 
-    This function updates the trust scores for each client based on the cosine similarity
-    and Euclidean distance between the current and previous updates. If no previous updates
-    are available, it falls back to either median or trimmed mean aggregation based on a predefined check.
-    Trusted clients are then aggregated using the selected method.
+    This function updates the trust scores for each client based on the cosine 
+    similarity and Euclidean distance between the current and previous updates.
+    If no previous updates are available, it falls back to FedAvg aggregation.
+    Trusted clients are then aggregated using the FedAvg method.
 
     Args:
-        gradients (List[Tuple[int, Dict[str, torch.Tensor]]]): A list of tuples containing
-            each client identifier and its gradient dictionary.
+        gradients (List[Tuple[int, Dict[str, torch.Tensor]]]): A list of tuples 
+            containing each client identifier and its gradient dictionary.
         net (nn.Module): The global model to be updated.
         lr (float): The learning rate.
         f (int): The number of malicious clients.
@@ -46,13 +44,9 @@ def KeTS_MedTrim(
     """
     logger.info("Aggregating gradients using KeTS.")
     server = kwargs.get('last_global_update', None)
-    additional_check = 'median'
     # Update trust scores for sampled clients
     if all(update is None for update in last_updates.values()):
-        if additional_check == 'median':
-            median_aggregation(gradients, net, lr, f, device, **kwargs)
-        else:
-            trim_mean(gradients, net, lr, f, device, **kwargs)
+        fedavg(gradients, net, lr, f, device, **kwargs)
         return
     for cid, gradient in gradients:
         if last_updates[cid] is not None:
@@ -79,8 +73,4 @@ def KeTS_MedTrim(
                       gradient in gradients if trust_scores[cid] >= last_segment]
     logger.info(
         f"Attacker clients: {[cid for cid, _ in gradients if trust_scores[cid] < last_segment]}")
-    if additional_check == 'median':
-        median_aggregation(honest_updates, net, lr, f, device, **kwargs)
-    else:
-        trim_mean(honest_updates, net, lr, f, device, **kwargs)
-    return
+    fedavg(honest_updates, net, lr, f, device, **kwargs)

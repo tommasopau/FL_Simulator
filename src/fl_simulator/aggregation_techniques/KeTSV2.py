@@ -5,9 +5,9 @@ import logging
 import torch.nn.functional as F
 import numpy as np
 from collections import defaultdict
-from app.utils.utility import segmentation
-from app.aggregation_techniques.aggregation import update_global_model
-from app.aggregation_techniques.fedavg import fedavg
+from fl_simulator.utils.utility import segmentation
+from fl_simulator.aggregation_techniques.aggregation import update_global_model
+from fl_simulator.aggregation_techniques.fedavg import fedavg
 
 logger = logging.getLogger(__name__)
 

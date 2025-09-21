@@ -1,11 +1,11 @@
 import torch
 import logging
-from app.utils.constants import MODEL_MAPPING
-from app.utils.config import Config, validate_config
-from app.dataset.dataset import FederatedDataLoader, DatasetHandler
-from app.server.server import FLTrustServer, AttackServer, AggregationStrategy, AttackType
-from app.db import db, SimulationResult
-from app.utils.seeding import set_deterministic_mode
+from fl_simulator.utils.constants import MODEL_MAPPING
+from fl_simulator.utils.config import Config, validate_config
+from fl_simulator.dataset.dataset import FederatedDataLoader, DatasetHandler
+from fl_simulator.server.server import FLTrustServer, AttackServer, AggregationStrategy, AttackType
+from fl_simulator.db import db, SimulationResult
+from fl_simulator.utils.seeding import set_deterministic_mode
 
 
 logger = logging.getLogger(__name__)

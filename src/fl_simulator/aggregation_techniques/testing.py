@@ -6,7 +6,7 @@ import torch.nn.functional as F
 import numpy as np
 from collections import defaultdict
 
-from app.aggregation_techniques.fedavg import fedavg
+from fl_simulator.aggregation_techniques.fedavg import fedavg
 
 logger = logging.getLogger(__name__)
 

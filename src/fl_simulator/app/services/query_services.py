@@ -1,7 +1,7 @@
 from sqlalchemy import and_
-from app.utils.constants import ALLOWED_FILTERS
-from app.db import SimulationResult
-from app.db import db
+from fl_simulator.utils.constants import ALLOWED_FILTERS
+from fl_simulator.db import SimulationResult
+from fl_simulator.db import db
 
 
 def filter_query(filters):
